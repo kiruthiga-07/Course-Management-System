@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard | EduTrack</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="app.css">
+</head>
+<body class="dashboard-page">
+
+    <nav class="navbar">
+        <div class="logo">EduTrack.</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="index.html#">Features</a></li>
+            <li><a href="index.html#">Reviews</a></li>
+            <li><a href="index.html#">Contact</a></li>
+            <li><a href="notifications.html">Notifications</a></li>
+        </ul>
+        <a href="login-selection.html" class="dashboard-logout" id="logoutLink">Logout</a>
+    </nav>
+
+    <header class="dashboard-hero">
+        <div class="dashboard-hero-inner">
+            <div class="dashboard-welcome">
+                <h1 id="welcomeHeading">Welcome, Student</h1>
+                <p id="welcomeSub">Here's an overview of your learning journey.</p>
+                <a href="courses.html" class="btn btn-primary" style="margin-top:14px; display:inline-block; padding:10px 22px;">Browse Courses &amp; Enroll</a>
+            </div>
+            <div style="text-align:right;">
+                <span class="dashboard-role-badge">Student Portal</span>
+                <div><a href="#" id="switchStudentLink" style="display:none; color: var(--gold-300); font-size: 0.8rem; margin-top: 10px; display:none;">Not you? Switch student</a></div>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-body">
+
+        <!-- ===================== STUDENT LOOKUP (shown if no active session) ===================== -->
+        <section class="dashboard-section" id="lookupSection" style="display:none;">
+            <div class="dashboard-panel" style="padding: 32px;">
+                <h3 style="margin-bottom: 8px;">View Your Dashboard</h3>
+                <p style="font-size: 0.9rem; margin-bottom: 18px;">Enter the roll number you used while enrolling to load your courses.</p>
+                <form id="lookupForm" style="display:flex; gap:12px; flex-wrap: wrap;">
+                    <input type="text" id="lookupRoll" placeholder="Enter your roll number" required
+                        style="flex:1; min-width:200px; padding:12px 14px; border:1.5px solid var(--border-color); border-radius:4px; font-family:inherit; font-size:0.95rem; background: var(--ivory); outline:none;">
+                    <button type="submit" class="btn btn-primary">View Dashboard</button>
+                </form>
+            </div>
+        </section>
+
+        <div id="dashboardContent">
+
+        <!-- ===================== LEARNING PROCESS ===================== -->
+        <section class="dashboard-section" id="learning-process">
+            <div class="dashboard-section-header">
+                <h2>
+                    <svg class="dashboard-section-icon" viewBox="0 0 24 24"><path d="M13 3v6h8V3h-8zM3 13v8h8v-8H3zm10 8h8v-8h-8v8zM3 3v6h8V3H3z"/></svg>
+                    Learning Process
+                </h2>
+                <span class="dashboard-count" id="countInProgress">0 in progress</span>
+            </div>
+            <div class="dashboard-panel" id="panelInProgress">
+                <div class="dashboard-empty">
+                    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    <p>No learning activity yet. Once you start a course, your progress will appear here.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== MY COURSES ===================== -->
+        <section class="dashboard-section" id="my-courses">
+            <div class="dashboard-section-header">
+                <h2>
+                    <svg class="dashboard-section-icon" viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm0 2.18l7 3.82-7 3.82-7-3.82 7-3.82zM12 18.82l-5-2.73v-4.36L12 14.5l5-2.73v4.36l-5 2.73z"/></svg>
+                    My Courses
+                </h2>
+                <span class="dashboard-count" id="countMyCourses">0 enrolled</span>
+            </div>
+            <div class="dashboard-panel" id="panelMyCourses">
+                <div class="dashboard-empty">
+                    <svg viewBox="0 0 24 24"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm0 2.18l7 3.82-7 3.82-7-3.82 7-3.82zM12 18.82l-5-2.73v-4.36L12 14.5l5-2.73v4.36l-5 2.73z"/></svg>
+                    <p>You haven't enrolled in any courses yet. Browse the catalog to get started.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===================== COMPLETED COURSES ===================== -->
+        <section class="dashboard-section" id="completed-courses">
+            <div class="dashboard-section-header">
+                <h2>
+                    <svg class="dashboard-section-icon" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    Completed Courses
+                </h2>
+                <span class="dashboard-count" id="countCompleted">0 completed</span>
+            </div>
+            <div class="dashboard-panel" id="panelCompleted">
+                <div class="dashboard-empty">
+                    <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    <p>No completed courses yet. Finished courses and certificates will be listed here.</p>
+                </div>
+            </div>
+        </section>
+
+        </div><!-- /#dashboardContent -->
+
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 EduTrack Course Management Systems. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+
+    <script src="app.js"></script>
+</body>
+</html>

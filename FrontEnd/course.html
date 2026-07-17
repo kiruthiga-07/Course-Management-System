@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="pageTitle">Course | EduTrack</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">EduTrack.</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="student-dashboard.html">My Dashboard</a></li>
+        </ul>
+        <a href="courses.html" class="btn btn-login">&larr; Back to Courses</a>
+    </nav>
+
+    <!-- ===================== COURSE NOT FOUND ===================== -->
+    <div id="notFoundState" style="display:none; max-width:600px; margin:80px auto; text-align:center; padding: 0 20px;">
+        <h2 style="margin-bottom:12px;">Course not found</h2>
+        <p style="margin-bottom:24px;">We couldn't find the course you were looking for.</p>
+        <a href="courses.html" class="btn btn-primary">Browse Courses</a>
+    </div>
+
+    <div id="courseRoot" style="display:none;">
+
+        <header class="course-hero">
+            <div class="course-hero-inner">
+                <span class="course-badge" id="courseBadge">Beginner</span>
+                <h1 id="courseTitle">Course Title</h1>
+                <p id="courseDescription">Course description goes here.</p>
+                <div class="course-hero-meta">
+                    <span id="metaInstructor">Instructor</span>
+                    <span id="metaDuration">Duration</span>
+                    <span id="metaMode">Mode</span>
+                    <span id="metaField">Field</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="course-content-body">
+
+            <div class="course-main">
+
+                <!-- Shown when the visitor has not enrolled in this course yet -->
+                <div class="enroll-required-banner" id="enrollBanner" style="display:none;">
+                    You're not enrolled in this course yet.
+                    <a href="#" id="enrollNowLink">Enroll now</a> to unlock the modules below and track your progress.
+                </div>
+
+                <div id="modulesContainer"></div>
+
+            </div>
+
+            <aside class="course-sidebar">
+                <div class="sidebar-card">
+                    <h4>Your Progress</h4>
+                    <div class="sidebar-progress-value" id="progressValue">0%</div>
+                    <div class="progress-track">
+                        <div class="progress-fill" id="progressFillBar" style="width:0%;"></div>
+                    </div>
+                    <div class="progress-label">
+                        <span id="progressModulesLabel">0 of 0 modules completed</span>
+                    </div>
+                </div>
+
+                <div class="sidebar-card" id="enrollmentStatusCard">
+                    <h4>Course Info</h4>
+                    <div class="sidebar-meta-row"><span>Instructor</span><span id="sideInstructor">—</span></div>
+                    <div class="sidebar-meta-row"><span>Duration</span><span id="sideDuration">—</span></div>
+                    <div class="sidebar-meta-row"><span>Mode</span><span id="sideMode">—</span></div>
+                    <div class="sidebar-meta-row"><span>Certificate</span><span id="sideCertificate">—</span></div>
+                </div>
+
+                <div class="sidebar-card" id="actionCard">
+                    <!-- Filled dynamically: enrolled / not-enrolled / completed states -->
+                </div>
+            </aside>
+
+        </div>
+    </div>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 EduTrack Course Management Systems. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+
+    <script src="app.js"></script>
+</body>
+</html>

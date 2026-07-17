@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EduTrack | Admin Login</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="app.css">
+</head>
+<body class="auth-page">
+
+    <div class="auth-split">
+
+        <div class="auth-panel-left">
+            <div class="auth-brand">
+                <div class="auth-mark">ET</div>
+                <div>
+                    <div class="auth-brand-name">EduTrack</div>
+                    <div class="auth-brand-sub">Course &amp; Progress System</div>
+                </div>
+            </div>
+
+            <div class="auth-panel-mid">
+                <div class="auth-eyebrow">Admin Console</div>
+                <h1>Oversee every course, instructor, and learner.</h1>
+                <p>Manage enrollments, publish new programs, and review platform-wide analytics from one console.</p>
+            </div>
+
+            <div></div>
+        </div>
+
+        <div class="auth-panel-right">
+            <div class="auth-form-wrap">
+                <a href="index.html" class="auth-back">&larr; Back to home</a>
+
+                <h2>Log in</h2>
+                <p class="auth-intro">Enter your administrator credentials to access the console.</p>
+
+                <form id="adminLoginForm" action="#" method="POST">
+                    <div class="field">
+                        <label for="email">Work email</label>
+                        <input type="email" id="email" name="email" placeholder="you@edutrack.com" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" name="password" placeholder="Your password" required>
+                    </div>
+
+                    <div class="field-meta">
+                        <a href="forgot-password.html">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-auth">Login</button>
+                </form>
+
+                <div class="auth-notice">
+                    <p><strong>Admin accounts are issued by EduTrack</strong> — they aren't self-registered. If you're part of the staff, contact your platform administrator to have an account created or to reset access.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script src="app.js"></script>
+</body>
+</html>

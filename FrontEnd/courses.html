@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Courses | EduTrack</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="logo">EduTrack.</div>
+        <ul class="nav-links">
+            <li><a href="index.html">Home</a></li>
+            <li><a href="courses.html">Courses</a></li>
+            <li><a href="index.html#">Features</a></li>
+            <li><a href="index.html#">Reviews</a></li>
+            <li><a href="index.html#">Contact</a></li>
+            <li id="navDashboardItem" style="display:none;"><a href="student-dashboard.html">Dashboard</a></li>
+            <li><a href="notifications.html">Notifications</a></li>
+        </ul>
+        <a href="login-selection.html" class="btn btn-login" id="navAuthBtn">Login / Register</a>
+    </nav>
+
+    <header class="page-hero">
+        <div class="page-hero-content">
+            <h1>Explore Our Programs</h1>
+            <p>Browse certified courses across every major discipline and find the right path for your career.</p>
+        </div>
+    </header>
+
+    <div class="field-nav">
+        <a href="#ai" class="field-nav-link">Artificial Intelligence</a>
+        <a href="#ml" class="field-nav-link">Machine Learning</a>
+        <a href="#data-science" class="field-nav-link">Data Science</a>
+        <a href="#cyber-security" class="field-nav-link">Cyber Security</a>
+        <a href="#web-dev" class="field-nav-link">Web Development</a>
+        <a href="#cloud" class="field-nav-link">Cloud Computing</a>
+    </div>
+
+    <div class="courses-search-wrap">
+        <div class="courses-search-bar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input type="text" id="courseSearchInput" placeholder="Search courses by title, instructor, or keyword...">
+        </div>
+        <p id="noSearchResults" style="display:none; text-align:center; color: var(--text-muted); margin-top: 18px;">
+            No courses match your search. Try a different keyword.
+        </p>
+    </div>
+
+    <!-- ===================== ARTIFICIAL INTELLIGENCE ===================== -->
+    <section class="course-field" id="ai">
+        <div class="section-header">
+            <h2 class="section-title">Artificial Intelligence</h2>
+            <p class="section-subtitle">Design intelligent systems that reason, learn, and adapt.</p>
+        </div>
+        <div class="course-grid" data-field="ai"></div>
+    </section>
+
+    <!-- ===================== MACHINE LEARNING ===================== -->
+    <section class="course-field course-field-alt" id="ml">
+        <div class="section-header">
+            <h2 class="section-title">Machine Learning</h2>
+            <p class="section-subtitle">Turn data into predictions with statistical and algorithmic models.</p>
+        </div>
+        <div class="course-grid" data-field="ml"></div>
+    </section>
+
+    <!-- ===================== DATA SCIENCE ===================== -->
+    <section class="course-field" id="data-science">
+        <div class="section-header">
+            <h2 class="section-title">Data Science</h2>
+            <p class="section-subtitle">Extract insights from raw data using statistics and visualization.</p>
+        </div>
+        <div class="course-grid" data-field="data-science"></div>
+    </section>
+
+    <!-- ===================== CYBER SECURITY ===================== -->
+    <section class="course-field course-field-alt" id="cyber-security">
+        <div class="section-header">
+            <h2 class="section-title">Cyber Security</h2>
+            <p class="section-subtitle">Defend systems, networks, and data against modern threats.</p>
+        </div>
+        <div class="course-grid" data-field="cyber-security"></div>
+    </section>
+
+    <!-- ===================== WEB DEVELOPMENT ===================== -->
+    <section class="course-field" id="web-dev">
+        <div class="section-header">
+            <h2 class="section-title">Web Development</h2>
+            <p class="section-subtitle">Build modern, responsive web applications end to end.</p>
+        </div>
+        <div class="course-grid" data-field="web-dev"></div>
+    </section>
+
+    <!-- ===================== CLOUD COMPUTING ===================== -->
+    <section class="course-field course-field-alt" id="cloud">
+        <div class="section-header">
+            <h2 class="section-title">Cloud Computing</h2>
+            <p class="section-subtitle">Design, deploy, and scale infrastructure on modern cloud platforms.</p>
+        </div>
+        <div class="course-grid" data-field="cloud"></div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2026 EduTrack Course Management Systems. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Courses | EduTrack Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+
+
+    <link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+    <div class="admin-topbar">
+        <div class="logo">EduTrack Admin</div>
+        <div class="admin-topbar-actions">
+            <a href="courses.html">&larr; Back to Courses</a>
+            <a href="#" id="logoutLink">Log out</a>
+        </div>
+    </div>
+
+    <div class="edit-page-container">
+        <aside class="course-sidebar">
+            <h3>Courses</h3>
+            <button type="button" id="addCourseBtn" class="btn btn-primary btn-add-course">+ Add New Course</button>
+            <div id="courseListByField"></div>
+        </aside>
+
+        <main class="schema-editor">
+            <h2 id="editorTitle">Add New Course</h2>
+            <p class="editor-subtitle" id="editorSubtitle">Fill in the details below and save to publish it on the Courses page.</p>
+
+            <form class="course-form" id="courseForm">
+                <input type="hidden" id="course-id" value="">
+
+                <div class="field">
+                    <label>Field</label>
+                    <select id="course-field" required></select>
+                </div>
+
+                <div class="field">
+                    <label>Course Title</label>
+                    <input type="text" id="course-title" required placeholder="e.g. AI Fundamentals">
+                </div>
+
+                <div class="form-row">
+                    <div class="field">
+                        <label>Level</label>
+                        <select id="course-badge" required></select>
+                    </div>
+                    <div class="field">
+                        <label>Duration</label>
+                        <input type="text" id="course-duration" required placeholder="e.g. 10 Weeks">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Description</label>
+                    <textarea id="course-description" required placeholder="Short description of the course"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="field">
+                        <label>Instructor</label>
+                        <input type="text" id="course-instructor" required placeholder="e.g. Dr. R. Menon">
+                    </div>
+                    <div class="field">
+                        <label>Mode</label>
+                        <select id="course-mode" required></select>
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Certificate</label>
+                    <select id="course-certificate" required></select>
+                </div>
+
+                <div class="modules-section">
+                    <h3>Module Content</h3>
+                    <p class="modules-section-hint">
+                        Each module shown to students has a Photo, a Video and a Theory part. Everything here is
+                        optional — leave a field blank and EduTrack will fall back to sensible auto-generated
+                        content for this course's field.
+                    </p>
+                    <div id="modulesEditor"></div>
+                    <button type="button" id="addModuleBtn" class="btn btn-outline" style="margin-bottom: 1rem;">+ Add Module</button>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="saveBtn">Save Course</button>
+                    <button type="button" class="btn btn-outline" id="deleteBtn" style="display:none;">Delete Course</button>
+                    <button type="button" class="btn btn-secondary" id="cancelBtn">Reset</button>
+                </div>
+
+                <div class="save-toast" id="saveToast"></div>
+            </form>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 (function (window) {
-    var BASE_URL = 'http://localhost:5000';
+    var BASE_URL = 'http://localhost:4000';
     var COLLECTIONS = {
         edutrack_courses: 'courses',
         edutrack_enrollments: 'enrollments',
@@ -53,27 +53,13 @@
         return xhr.responseText ? JSON.parse(xhr.responseText) : null;
     }
 
-    function toLocal(serverItem) {
-        var item = {};
-        Object.keys(serverItem).forEach(function (field) {
-            if (field !== 'appId') {
-                item[field] = serverItem[field];
-            }
-        });
-        if (serverItem.appId !== undefined) {
-            item.id = serverItem.appId;
-        }
-        return item;
-    }
-
     function load(key) {
-        var serverList = request('GET', '/' + COLLECTIONS[key]);
-        var list = [];
+        var list = request('GET', '/' + COLLECTIONS[key]);
         var map = {};
-        serverList.forEach(function (serverItem) {
-            var item = toLocal(serverItem);
-            list.push(item);
-            map[String(item.id)] = { serverId: String(serverItem.id), serial: JSON.stringify(item) };
+        list.forEach(function (item) {
+            if (item && item.id !== undefined) {
+                map[String(item.id)] = JSON.stringify(item);
+            }
         });
         store[key] = { list: list, map: map, loadedAt: Date.now() };
     }
@@ -90,8 +76,8 @@
             hideBanner();
         } catch (err) {
             online = false;
-            console.warn('EduTrack: mock API not reachable at ' + BASE_URL, err);
-            showBanner('Mock API is not running. Start it with "npm start" in the mockapi folder, then refresh. Changes are NOT being saved to db.json.');
+            console.warn('EduTrack: backend not reachable at ' + BASE_URL, err);
+            showBanner('Backend is not running. Start it with "npm start" in the backend folder, then refresh. Changes are NOT being saved to db.json.');
         }
     }
 
@@ -103,27 +89,9 @@
         try {
             load(key);
         } catch (err) {
-            console.warn('EduTrack: could not refresh ' + COLLECTIONS[key] + ' from mock API', err);
+            console.warn('EduTrack: could not refresh ' + COLLECTIONS[key] + ' from backend', err);
         }
         return store[key];
-    }
-
-    function create(name, item) {
-        var body = {};
-        Object.keys(item).forEach(function (field) { body[field] = item[field]; });
-        body.appId = item.id;
-        var saved = request('POST', '/' + name, body);
-        return String(saved.id);
-    }
-
-    function update(name, serverId, item) {
-        var body = {};
-        Object.keys(item).forEach(function (field) { body[field] = item[field]; });
-        body.id = serverId;
-        if (String(item.id) !== serverId) {
-            body.appId = item.id;
-        }
-        request('PUT', '/' + name + '/' + encodeURIComponent(serverId), body);
     }
 
     function write(key, value) {
@@ -147,21 +115,21 @@
             }
             var id = String(item.id);
             var serial = JSON.stringify(item);
-            var previous = before[id];
             try {
-                if (!previous) {
-                    after[id] = { serverId: create(name, item), serial: serial };
-                } else if (previous.serial !== serial) {
-                    update(name, previous.serverId, item);
-                    after[id] = { serverId: previous.serverId, serial: serial };
+                if (!(id in before)) {
+                    request('POST', '/' + name, item);
+                    after[id] = serial;
+                } else if (before[id] !== serial) {
+                    request('PUT', '/' + name + '/' + encodeURIComponent(id), item);
+                    after[id] = serial;
                 } else {
-                    after[id] = previous;
+                    after[id] = before[id];
                 }
             } catch (err) {
                 failed = true;
-                console.error('EduTrack: could not save to mock API', err);
-                if (previous) {
-                    after[id] = previous;
+                console.error('EduTrack: could not save to backend', err);
+                if (id in before) {
+                    after[id] = before[id];
                 }
             }
         });
@@ -178,17 +146,17 @@
                 return;
             }
             try {
-                request('DELETE', '/' + name + '/' + encodeURIComponent(before[id].serverId));
+                request('DELETE', '/' + name + '/' + encodeURIComponent(id));
             } catch (err) {
                 failed = true;
-                console.error('EduTrack: could not delete from mock API', err);
+                console.error('EduTrack: could not delete from backend', err);
                 after[id] = before[id];
             }
         });
 
         store[key] = { list: list, map: after, loadedAt: Date.now() };
         if (failed) {
-            showBanner('Could not save your change to the mock API. Check that "npm start" is running in the mockapi folder.');
+            showBanner('Could not save your change to the backend. Check that "npm start" is running in the backend folder.');
         }
     }
 

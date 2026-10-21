@@ -1,5 +1,5 @@
 (function (window) {
-    var BASE_URL = 'http://localhost:4000';
+    var BASE_URL = 'http://localhost:5000/api/v1';
     var COLLECTIONS = {
         edutrack_courses: 'courses',
         edutrack_enrollments: 'enrollments',
@@ -40,6 +40,8 @@
         }
     }
 
+    // The Express API wraps every response as { success, data, ... } instead
+    // of returning the raw array/object the old json-server did.
     function request(method, path, body) {
         var xhr = new XMLHttpRequest();
         xhr.open(method, BASE_URL + path, false);
@@ -47,14 +49,17 @@
             xhr.setRequestHeader('Content-Type', 'application/json');
         }
         xhr.send(body === undefined ? null : JSON.stringify(body));
+        var parsed = xhr.responseText ? JSON.parse(xhr.responseText) : null;
         if (xhr.status < 200 || xhr.status >= 300) {
-            throw new Error(method + ' ' + path + ' failed with status ' + xhr.status);
+            var message = (parsed && parsed.message) || (method + ' ' + path + ' failed with status ' + xhr.status);
+            throw new Error(message);
         }
-        return xhr.responseText ? JSON.parse(xhr.responseText) : null;
+        return parsed;
     }
 
     function load(key) {
-        var list = request('GET', '/' + COLLECTIONS[key]);
+        var response = request('GET', '/' + COLLECTIONS[key]);
+        var list = (response && response.data) || [];
         var map = {};
         list.forEach(function (item) {
             if (item && item.id !== undefined) {
@@ -77,7 +82,7 @@
         } catch (err) {
             online = false;
             console.warn('EduTrack: backend not reachable at ' + BASE_URL, err);
-            showBanner('Backend is not running. Start it with "npm start" in the backend folder, then refresh. Changes are NOT being saved to db.json.');
+            showBanner('Backend is not running. Start it with "npm run dev" in the backend folder, then refresh. Changes are NOT being saved to db.json.');
         }
     }
 
@@ -108,6 +113,7 @@
         var before = store[key] ? store[key].map : {};
         var after = {};
         var failed = false;
+        var failMessage = '';
 
         list.forEach(function (item) {
             if (!item || item.id === undefined) {
@@ -127,6 +133,7 @@
                 }
             } catch (err) {
                 failed = true;
+                failMessage = err.message;
                 console.error('EduTrack: could not save to backend', err);
                 if (id in before) {
                     after[id] = before[id];
@@ -149,6 +156,7 @@
                 request('DELETE', '/' + name + '/' + encodeURIComponent(id));
             } catch (err) {
                 failed = true;
+                failMessage = err.message;
                 console.error('EduTrack: could not delete from backend', err);
                 after[id] = before[id];
             }
@@ -156,7 +164,7 @@
 
         store[key] = { list: list, map: after, loadedAt: Date.now() };
         if (failed) {
-            showBanner('Could not save your change to the backend. Check that "npm start" is running in the backend folder.');
+            showBanner('Could not save your change: ' + failMessage);
         }
     }
 

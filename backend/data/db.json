@@ -291,13 +291,13 @@
   ],
   "students": [
     {
-      "id": "stu-muve9k4p-521",
-      "fullName": "Anika M B",
-      "rollNo": "E24AI003",
-      "program": "fullstack",
-      "email": "anika23@gmail.com",
-      "password": "anika23@",
-      "createdAt": 1791213492265
+      "id": "stu-mvhnfk9q-435",
+      "fullName": "Hema",
+      "rollNo": "024",
+      "program": "python",
+      "email": "hema24@gmail.com",
+      "password": "hema24@",
+      "createdAt": 1792559144798
     }
   ],
   "enrollments": []

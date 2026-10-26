@@ -47,7 +47,10 @@
             .then(function (regResult) {
                 if (!regResult.success) {
                     ui.setButtonLoading(submitBtn, false);
-                    ui.showFormMessage(messageEl, 'An account with that email already exists. Try logging in instead.', 'error');
+                    var failureText = regResult.reason === 'exists'
+                        ? 'An account with that email already exists. Try logging in instead.'
+                        : (regResult.message || 'Something went wrong. Please try again.');
+                    ui.showFormMessage(messageEl, failureText, 'error');
                     return;
                 }
                 ui.redirectTo('student-dashboard.html');

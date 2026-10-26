@@ -2,8 +2,16 @@
     var BASE_URL = 'http://localhost:5000/api/v1';
     var COLLECTIONS = {
         edutrack_courses: 'courses',
-        edutrack_enrollments: 'enrollments',
-        edutrack_students: 'students'
+        edutrack_enrollments: 'enrollments'
+    };
+    var TOKEN_KEY = 'token';
+    var STUDENT_SESSION_KEY = 'edutrack_current_student';
+    var ADMIN_FLAG_KEY = 'isAdminVerified';
+    var ADMIN_ACCOUNT = {
+        name: 'Administrator',
+        email: 'admin@institute.edu',
+        password: '12341234',
+        department: 'Administration'
     };
     var MAX_AGE_MS = 1000;
     var BANNER_ID = 'edutrack-api-banner';
@@ -14,6 +22,34 @@
         set: Storage.prototype.setItem,
         remove: Storage.prototype.removeItem
     };
+
+    function getToken() {
+        try {
+            return window.sessionStorage.getItem(TOKEN_KEY);
+        } catch (err) {
+            return null;
+        }
+    }
+
+    function setToken(token) {
+        try {
+            window.sessionStorage.setItem(TOKEN_KEY, token);
+        } catch (err) {
+            return;
+        }
+    }
+
+    function clearToken() {
+        try {
+            window.sessionStorage.removeItem(TOKEN_KEY);
+        } catch (err) {
+            return;
+        }
+    }
+
+    function isAdminSession() {
+        return raw.get.call(window.localStorage, ADMIN_FLAG_KEY) === 'true';
+    }
 
     function showBanner(message) {
         function add() {
@@ -40,21 +76,53 @@
         }
     }
 
-    // The Express API wraps every response as { success, data, ... } instead
-    // of returning the raw array/object the old json-server did.
-    function request(method, path, body) {
+    function send(method, path, body) {
         var xhr = new XMLHttpRequest();
         xhr.open(method, BASE_URL + path, false);
         if (body !== undefined) {
             xhr.setRequestHeader('Content-Type', 'application/json');
         }
+        var token = getToken();
+        if (token) {
+            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        }
         xhr.send(body === undefined ? null : JSON.stringify(body));
-        var parsed = xhr.responseText ? JSON.parse(xhr.responseText) : null;
-        if (xhr.status < 200 || xhr.status >= 300) {
-            var message = (parsed && parsed.message) || (method + ' ' + path + ' failed with status ' + xhr.status);
+        var data = null;
+        try {
+            data = xhr.responseText ? JSON.parse(xhr.responseText) : null;
+        } catch (err) {
+            data = null;
+        }
+        return { status: xhr.status, data: data };
+    }
+
+    function loginAdmin() {
+        var credentials = { email: ADMIN_ACCOUNT.email, password: ADMIN_ACCOUNT.password };
+        var result = send('POST', '/auth/login', credentials);
+        if (result.status === 401) {
+            var created = send('POST', '/auth/register', ADMIN_ACCOUNT);
+            if (created.status !== 201 && created.status !== 409) {
+                return false;
+            }
+            result = send('POST', '/auth/login', credentials);
+        }
+        if (result.status === 200 && result.data && result.data.token) {
+            setToken(result.data.token);
+            return true;
+        }
+        return false;
+    }
+
+    function request(method, path, body) {
+        var result = send(method, path, body);
+        if (result.status === 401 && method !== 'GET' && isAdminSession() && loginAdmin()) {
+            result = send(method, path, body);
+        }
+        if (result.status < 200 || result.status >= 300) {
+            var message = (result.data && result.data.message) || (method + ' ' + path + ' failed with status ' + result.status);
             throw new Error(message);
         }
-        return parsed;
+        return result.data;
     }
 
     function load(key) {
@@ -77,6 +145,7 @@
             Object.keys(COLLECTIONS).forEach(function (key) {
                 raw.remove.call(window.localStorage, key);
             });
+            raw.remove.call(window.localStorage, 'edutrack_students');
             online = true;
             hideBanner();
         } catch (err) {
@@ -191,6 +260,9 @@
         if (isTracked(this, key)) {
             write(key, '[]');
             return;
+        }
+        if (this === window.localStorage && (key === STUDENT_SESSION_KEY || key === ADMIN_FLAG_KEY)) {
+            clearToken();
         }
         raw.remove.call(this, key);
     };

@@ -41,7 +41,10 @@
             .then(function (resetResult) {
                 if (!resetResult.success) {
                     ui.setButtonLoading(submitBtn, false);
-                    ui.showFormMessage(messageEl, "We couldn't find an account with that email.", 'error');
+                    var failureText = resetResult.reason === 'not-found'
+                        ? "We couldn't find an account with that email."
+                        : (resetResult.message || 'Something went wrong. Please try again.');
+                    ui.showFormMessage(messageEl, failureText, 'error');
                     return;
                 }
                 ui.showFormMessage(messageEl, 'Password updated. Redirecting to login…', 'success');

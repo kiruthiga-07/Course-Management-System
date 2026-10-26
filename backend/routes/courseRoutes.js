@@ -7,13 +7,14 @@ const {
     removeCourse
 } = require("../controllers/courseController");
 const validateCourse = require("../middleware/courseValidation");
+const { authenticateToken } = require("../middleware/authMiddleware");
 
 const router = express.Router();
 
 router.get("/", getCourses);
 router.get("/:id", getCourse);
-router.post("/", validateCourse, addCourse);
-router.put("/:id", editCourse);
-router.delete("/:id", removeCourse);
+router.post("/", authenticateToken, validateCourse, addCourse);
+router.put("/:id", authenticateToken, editCourse);
+router.delete("/:id", authenticateToken, removeCourse);
 
 module.exports = router;

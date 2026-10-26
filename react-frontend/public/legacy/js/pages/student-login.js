@@ -2,7 +2,7 @@
    EduTrack — pages/student-login.js
    Wires up the student login form:
      - existing account + correct password/roll no  -> student-dashboard.html
-     - no account found for that email               -> student-register.html
+     - wrong email, password or roll no               -> error message
      - "Forgot password?"                             -> reset-password.html
    Depends on validation.js, ui.js and auth.js being loaded first.
    ========================================================================== */
@@ -47,23 +47,14 @@
 
         ui.setButtonLoading(submitBtn, true, 'Signing in…');
 
-        auth.studentExists(email)
-            .then(function (exists) {
-                if (!exists) {
-                    ui.showFormMessage(messageEl, "We couldn't find an account with that email. Taking you to registration…", 'error');
-                    setTimeout(function () {
-                        ui.redirectTo('student-register.html?email=' + encodeURIComponent(email));
-                    }, 1400);
+        auth.loginStudent({ email: email, password: password, rollNo: rollNo })
+            .then(function (loginResult) {
+                if (loginResult.success) {
+                    ui.redirectTo('student-dashboard.html');
                     return;
                 }
-                return auth.loginStudent({ email: email, password: password, rollNo: rollNo }).then(function (loginResult) {
-                    if (loginResult.success) {
-                        ui.redirectTo('student-dashboard.html');
-                        return;
-                    }
-                    ui.setButtonLoading(submitBtn, false);
-                    ui.showFormMessage(messageEl, 'Incorrect password or roll number. Please try again.', 'error');
-                });
+                ui.setButtonLoading(submitBtn, false);
+                ui.showFormMessage(messageEl, 'Invalid email, password or roll number. Please try again.', 'error');
             })
             .catch(function () {
                 ui.setButtonLoading(submitBtn, false);

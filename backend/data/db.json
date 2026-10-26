@@ -291,13 +291,12 @@
   ],
   "students": [
     {
-      "id": "stu-mvhnfk9q-435",
-      "fullName": "Hema",
-      "rollNo": "024",
-      "program": "python",
-      "email": "hema24@gmail.com",
-      "password": "hema24@",
-      "createdAt": 1792559144798
+      "id": "b85a0dae-530e-4a1e-b05d-27d47508f12a",
+      "name": "Arun Kumar",
+      "email": "arun@example.com",
+      "passwordHash": "$2b$12$aBFoIWl87UHEb6isS264ZeyJEyXFXjPggtZF2aTMsbmtDZVyRv71S",
+      "department": "Computer Science",
+      "createdAt": "2026-10-26T08:30:29.561Z"
     }
   ],
   "enrollments": []

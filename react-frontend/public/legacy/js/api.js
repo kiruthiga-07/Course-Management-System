@@ -1,86 +1,45 @@
-/* ==========================================================================
-   EduTrack — api.js
-   Centralized data-access layer. Every read/write against browser storage
-   goes through here and every function returns a Promise, so this reads
-   like real API calls and is the only place that would need to change if
-   a real backend is added later.
-
-   Loaded as a plain <script> (not type="module") so the site works when
-   opened directly from disk, with no local server required — matches how
-   the existing app.js is loaded. Everything attaches to the shared
-   window.EduTrackAuth namespace instead of using import/export.
-   ========================================================================== */
 (function (window) {
-    var STUDENTS_KEY = 'edutrack_students';
-    var SESSION_KEY = 'edutrack_current_student'; // shared with app.js's EduTrackEnrollments
+    var SESSION_KEY = 'edutrack_current_student';
+    var TOKEN_KEY = 'token';
 
-    function readList(key) {
-        try {
-            var raw = localStorage.getItem(key);
-            var parsed = raw ? JSON.parse(raw) : [];
-            return Array.isArray(parsed) ? parsed : [];
-        } catch (err) {
-            return [];
-        }
+    function baseUrl() {
+        return (window.EduTrackServer && window.EduTrackServer.baseUrl) || 'http://localhost:5000/api/v1';
     }
 
-    function writeList(key, list) {
-        localStorage.setItem(key, JSON.stringify(list));
-    }
-
-    function normalize(value) {
-        return (value || '').toString().trim().toLowerCase();
-    }
-
-    /* ---------------- Students ---------------- */
-
-    function getStudents() {
-        return Promise.resolve(readList(STUDENTS_KEY));
-    }
-
-    function findStudentByEmail(email) {
-        return getStudents().then(function (list) {
-            return list.filter(function (s) { return normalize(s.email) === normalize(email); })[0] || null;
+    function post(path, body) {
+        return fetch(baseUrl() + path, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        }).then(function (response) {
+            return response.json().catch(function () {
+                return {};
+            }).then(function (data) {
+                return { ok: response.ok, status: response.status, data: data };
+            });
         });
     }
 
-    function findStudentByRollNo(rollNo) {
-        return getStudents().then(function (list) {
-            return list.filter(function (s) { return normalize(s.rollNo) === normalize(rollNo); })[0] || null;
+    function registerStudent(student) {
+        return post('/auth/register', {
+            name: student.fullName,
+            email: student.email,
+            password: student.password,
+            department: student.program,
+            rollNo: student.rollNo
         });
     }
 
-    function createStudent(student) {
-        return getStudents().then(function (list) {
-            var record = {
-                id: 'stu-' + Date.now().toString(36) + '-' + Math.floor(Math.random() * 1000),
-                fullName: student.fullName,
-                rollNo: student.rollNo,
-                program: student.program,
-                email: student.email,
-                password: student.password, // demo project only — no backend to hash this
-                createdAt: Date.now()
-            };
-            list.push(record);
-            writeList(STUDENTS_KEY, list);
-            return record;
+    function loginStudent(credentials) {
+        return post('/auth/login', {
+            email: credentials.email,
+            password: credentials.password
         });
     }
 
-    function updateStudentPassword(email, newPassword) {
-        return getStudents().then(function (list) {
-            var idx = -1;
-            for (var i = 0; i < list.length; i++) {
-                if (normalize(list[i].email) === normalize(email)) { idx = i; break; }
-            }
-            if (idx === -1) return null;
-            list[idx].password = newPassword;
-            writeList(STUDENTS_KEY, list);
-            return list[idx];
-        });
+    function resetPassword(email, password) {
+        return post('/auth/reset-password', { email: email, password: password });
     }
-
-    /* ---------------- Session ---------------- */
 
     function getSession() {
         try {
@@ -98,18 +57,39 @@
 
     function clearSession() {
         localStorage.removeItem(SESSION_KEY);
+        try {
+            sessionStorage.removeItem(TOKEN_KEY);
+        } catch (err) {
+            return Promise.resolve();
+        }
         return Promise.resolve();
+    }
+
+    function saveToken(token) {
+        try {
+            sessionStorage.setItem(TOKEN_KEY, token);
+        } catch (err) {
+            return;
+        }
+    }
+
+    function getToken() {
+        try {
+            return sessionStorage.getItem(TOKEN_KEY);
+        } catch (err) {
+            return null;
+        }
     }
 
     window.EduTrackAuth = window.EduTrackAuth || {};
     window.EduTrackAuth.api = {
-        getStudents: getStudents,
-        findStudentByEmail: findStudentByEmail,
-        findStudentByRollNo: findStudentByRollNo,
-        createStudent: createStudent,
-        updateStudentPassword: updateStudentPassword,
+        registerStudent: registerStudent,
+        loginStudent: loginStudent,
+        resetPassword: resetPassword,
         getSession: getSession,
         saveSession: saveSession,
-        clearSession: clearSession
+        clearSession: clearSession,
+        saveToken: saveToken,
+        getToken: getToken
     };
 })(window);

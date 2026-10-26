@@ -19,6 +19,11 @@
         return a === b;
     }
 
+    function isValidPassword(password) {
+        var length = (password || '').toString().length;
+        return length >= 8 && length <= 72;
+    }
+
     // Keys match each form's input `id` attributes, so callers can hand the
     // errors object straight to ui.js's applyFieldErrors().
 
@@ -36,8 +41,8 @@
         if (!isNonEmpty(data.studentId)) errors['student-id'] = 'Student ID / Roll No is required.';
         if (!isNonEmpty(data.program)) errors.program = 'Please select a program.';
         if (!isValidEmail(data.email)) errors.email = 'Enter a valid email address.';
-        if (!minLength(data.password, 6)) {
-            errors.password = 'Password must be at least 6 characters.';
+        if (!isValidPassword(data.password)) {
+            errors.password = 'Password must be between 8 and 72 characters.';
         } else if (!passwordsMatch(data.password, data.confirmPassword)) {
             errors['confirm-password'] = 'Passwords do not match.';
         }
@@ -47,8 +52,8 @@
     function validateResetForm(data) {
         var errors = {};
         if (!isValidEmail(data.email)) errors.email = 'Enter the email address on your account.';
-        if (!minLength(data.password, 6)) {
-            errors.password = 'Password must be at least 6 characters.';
+        if (!isValidPassword(data.password)) {
+            errors.password = 'Password must be between 8 and 72 characters.';
         } else if (!passwordsMatch(data.password, data.confirmPassword)) {
             errors['confirm-password'] = 'Passwords do not match.';
         }
@@ -60,6 +65,7 @@
         isValidEmail: isValidEmail,
         isNonEmpty: isNonEmpty,
         minLength: minLength,
+        isValidPassword: isValidPassword,
         passwordsMatch: passwordsMatch,
         validateLoginForm: validateLoginForm,
         validateRegisterForm: validateRegisterForm,

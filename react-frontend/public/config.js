@@ -1,1 +1,1 @@
-window.EDUTRACK_API_URL = "http://localhost:5000/api/v1";
+window.EDUTRACK_API_URL = "https://course-management-system-c121.onrender.com/api/v1";

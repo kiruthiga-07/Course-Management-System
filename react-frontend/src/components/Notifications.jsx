@@ -44,25 +44,39 @@ function Notifications() {
     const unread = notifications.filter((item) => !item.isRead).length;
 
     return (
-        <section>
-            <h2>Notifications ({unread} unread)</h2>
+        <section className="msg-panel note-panel">
+            <div className="msg-panel-head">
+                <h2>Notifications</h2>
+                {unread > 0 && <span className="msg-badge">{unread} new</span>}
+            </div>
 
-            {notifications.length === 0 && <p>No notifications yet.</p>}
+            <div className="note-list">
+                {notifications.length === 0 && (
+                    <p className="msg-empty">No notifications yet.</p>
+                )}
 
-            {notifications.map((item) => (
-                <div key={item._id}>
-                    <p>
-                        {item.message}{" "}
-                        <small>{new Date(item.createdAt).toLocaleString()}</small>
-                    </p>
+                {notifications.map((item) => (
+                    <div
+                        key={item._id}
+                        className={item.isRead ? "note-item" : "note-item unread"}
+                    >
+                        <span className="note-dot" />
+                        <div className="note-body">
+                            <p>{item.message}</p>
+                            <small>{new Date(item.createdAt).toLocaleString()}</small>
+                        </div>
 
-                    {!item.isRead && (
-                        <button onClick={() => markRead(item._id)}>
-                            Mark as Read
-                        </button>
-                    )}
-                </div>
-            ))}
+                        {!item.isRead && (
+                            <button
+                                className="msg-btn ghost small"
+                                onClick={() => markRead(item._id)}
+                            >
+                                Mark read
+                            </button>
+                        )}
+                    </div>
+                ))}
+            </div>
         </section>
     );
 }

@@ -13,14 +13,18 @@ export default function Messages() {
             <PageCss href="/css/app.css" />
             <BodyClass />
             <Navbar variant="student" />
-            <main style={{ maxWidth: "900px", margin: "0 auto", padding: "32px 16px" }}>
+            <header className="msg-hero">
+                <h1>Messages</h1>
+                <p>Chat with other students and get live notifications.</p>
+            </header>
+            <main className="msg-page">
                 {loggedIn ? (
                     <>
                         <Notifications />
                         <Chat />
                     </>
                 ) : (
-                    <p>Please log in to use chat and notifications.</p>
+                    <p className="msg-empty">Please log in to use chat and notifications.</p>
                 )}
             </main>
             <Footer />

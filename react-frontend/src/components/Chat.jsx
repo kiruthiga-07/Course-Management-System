@@ -118,19 +118,39 @@ function Chat() {
         return contact ? contact.name : "User";
     };
 
+    const listRef = useRef(null);
+
+    useEffect(() => {
+        if (listRef.current) {
+            listRef.current.scrollTop = listRef.current.scrollHeight;
+        }
+    }, [messages]);
+
+    const timeOf = (value) =>
+        value
+            ? new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+            : "";
+
     return (
-        <section>
-            <h2>Student Chat</h2>
+        <section className="msg-panel chat-panel">
+            <div className="msg-panel-head">
+                <h2>Student Chat</h2>
+                <span className={connected ? "msg-pill online" : "msg-pill offline"}>
+                    <span className="msg-dot" />
+                    {connected ? "Online" : "Offline"}
+                </span>
+            </div>
 
-            <p>Connection: {connected ? "Online" : "Offline"}</p>
+            {error && (
+                <p className="msg-error" role="alert">
+                    {error}
+                </p>
+            )}
 
-            {error && <p role="alert">{error}</p>}
-
-            <form onSubmit={sendMessage}>
+            <div className="chat-contact">
                 <select
                     value={recipientId}
                     onChange={(e) => selectRecipient(e.target.value)}
-                    required
                 >
                     <option value="">Choose who to message</option>
                     {contacts.map((contact) => (
@@ -140,36 +160,57 @@ function Chat() {
                     ))}
                 </select>
 
-                <input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Type a message"
-                    maxLength={2000}
-                    required
-                />
-
-                <button type="submit" disabled={!connected || !recipientId}>
-                    Send
-                </button>
-
                 <button
                     type="button"
+                    className="msg-btn ghost"
                     onClick={() => loadHistory(recipientId)}
                     disabled={!recipientId}
                 >
-                    Load Chat History
+                    Load history
+                </button>
+            </div>
+
+            <div className="chat-list" ref={listRef}>
+                {!recipientId && (
+                    <p className="msg-empty">Choose someone above to start chatting.</p>
+                )}
+
+                {recipientId && messages.length === 0 && (
+                    <p className="msg-empty">No messages yet. Say hello!</p>
+                )}
+
+                {messages.map((item) => {
+                    const mine = item.sender === myId;
+                    return (
+                        <div key={item._id} className={mine ? "bubble-row mine" : "bubble-row"}>
+                            <div className={mine ? "bubble mine" : "bubble"}>
+                                {!mine && <span className="bubble-name">{nameOf(item.sender)}</span>}
+                                <span className="bubble-text">{item.text}</span>
+                                <span className="bubble-time">{timeOf(item.createdAt)}</span>
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
+            <form className="chat-form" onSubmit={sendMessage}>
+                <input
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder={recipientId ? "Type a message" : "Choose a person first"}
+                    maxLength={2000}
+                    disabled={!recipientId}
+                    required
+                />
+
+                <button
+                    type="submit"
+                    className="msg-btn"
+                    disabled={!connected || !recipientId}
+                >
+                    Send
                 </button>
             </form>
-
-            <h3>Messages</h3>
-
-            {messages.length === 0 && <p>No messages yet.</p>}
-
-            {messages.map((item) => (
-                <p key={item._id}>
-                    <strong>{nameOf(item.sender)}:</strong> {item.text}
-                </p>
-            ))}
         </section>
     );
 }

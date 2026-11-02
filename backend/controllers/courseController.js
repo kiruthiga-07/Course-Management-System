@@ -6,70 +6,82 @@ const {
     deleteCourse
 } = require("../services/courseService");
 
-// GET /api/v1/courses
-const getCourses = (req, res) => {
-    const courses = getAllCourses();
-    res.status(200).json({
-        success: true,
-        count: courses.length,
-        data: courses
-    });
-};
-
-// GET /api/v1/courses/:id
-const getCourse = (req, res) => {
-    const course = getCourseById(req.params.id);
-    if (!course) {
-        return res.status(404).json({
-            success: false,
-            message: "Course not found"
+const getCourses = async (req, res, next) => {
+    try {
+        const courses = await getAllCourses();
+        res.status(200).json({
+            success: true,
+            count: courses.length,
+            data: courses
         });
+    } catch (error) {
+        next(error);
     }
-    res.status(200).json({
-        success: true,
-        data: course
-    });
 };
 
-// POST /api/v1/courses
-const addCourse = (req, res) => {
-    const newCourse = createCourse(req.body);
-    res.status(201).json({
-        success: true,
-        message: "Course created successfully",
-        data: newCourse
-    });
+const getCourse = async (req, res, next) => {
+    try {
+        const course = await getCourseById(req.params.id);
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+        res.status(200).json({ success: true, data: course });
+    } catch (error) {
+        next(error);
+    }
 };
 
-// PUT /api/v1/courses/:id
-const editCourse = (req, res) => {
-    const updatedCourse = updateCourse(req.params.id, req.body);
-    if (!updatedCourse) {
-        return res.status(404).json({
-            success: false,
-            message: "Course not found"
+const addCourse = async (req, res, next) => {
+    try {
+        const newCourse = await createCourse(req.body);
+        res.status(201).json({
+            success: true,
+            message: "Course created successfully",
+            data: newCourse
         });
+    } catch (error) {
+        next(error);
     }
-    res.status(200).json({
-        success: true,
-        message: "Course updated successfully",
-        data: updatedCourse
-    });
 };
 
-// DELETE /api/v1/courses/:id
-const removeCourse = (req, res) => {
-    const deleted = deleteCourse(req.params.id);
-    if (!deleted) {
-        return res.status(404).json({
-            success: false,
-            message: "Course not found"
+const editCourse = async (req, res, next) => {
+    try {
+        const updatedCourse = await updateCourse(req.params.id, req.body);
+        if (!updatedCourse) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Course updated successfully",
+            data: updatedCourse
         });
+    } catch (error) {
+        next(error);
     }
-    res.status(200).json({
-        success: true,
-        message: "Course deleted successfully"
-    });
+};
+
+const removeCourse = async (req, res, next) => {
+    try {
+        const deleted = await deleteCourse(req.params.id);
+        if (!deleted) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+        res.status(200).json({
+            success: true,
+            message: "Course deleted successfully"
+        });
+    } catch (error) {
+        next(error);
+    }
 };
 
 module.exports = {

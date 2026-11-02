@@ -26,7 +26,9 @@
 
     function startSession(loginData) {
         var session = toSession(loginData.student);
+        localStorage.removeItem('isAdminVerified');
         api.saveToken(loginData.token);
+        api.saveRole(loginData.student.role);
         return api.saveSession(session).then(function () {
             state.setCurrentUser(session);
             return session;

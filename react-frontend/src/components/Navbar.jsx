@@ -8,6 +8,9 @@ import { Link } from "react-router-dom";
  * up logout — changing an id here would silently break that logic.
  */
 function Navbar({ variant = "courses" }) {
+    const isStudentRole = sessionStorage.getItem("role") === "student";
+    const hasToken = !!sessionStorage.getItem("token");
+
     if (variant === "home") {
         return (
             <nav className="navbar">
@@ -42,6 +45,7 @@ function Navbar({ variant = "courses" }) {
                 <ul className="nav-links">
                     <li><Link to="/">Home</Link></li>
                     <li><Link to="/courses">Courses</Link></li>
+                    <li><Link to="/messages">Messages</Link></li>
                 </ul>
                 <Link to="/login-selection" className="dashboard-logout" id="adminLogoutBtn">Logout</Link>
             </nav>
@@ -56,6 +60,8 @@ function Navbar({ variant = "courses" }) {
                     <li><Link to="/">Home</Link></li>
                     <li><Link to="/courses">Courses</Link></li>
                     <li><Link to="/notifications">Notifications</Link></li>
+                    <li><Link to="/my-learning">My Learning</Link></li>
+                    <li><Link to="/messages">Messages</Link></li>
                 </ul>
                 <Link to="/login-selection" className="dashboard-logout" id="logoutLink">Logout</Link>
             </nav>
@@ -74,6 +80,12 @@ function Navbar({ variant = "courses" }) {
                 <li id="navDashboardItem" style={{ display: "none" }}>
                     <Link to="/student-dashboard">Dashboard</Link>
                 </li>
+                {isStudentRole && (
+                    <li><Link to="/my-learning">My Learning</Link></li>
+                )}
+                {hasToken && (
+                    <li><Link to="/messages">Messages</Link></li>
+                )}
                 <li>
                     <Link to="/notifications" style={notificationsActive ? { fontWeight: 700 } : undefined}>
                         Notifications

@@ -11,6 +11,7 @@ export async function loginStudent(credentials) {
 
     if (response.data.token) {
         sessionStorage.setItem("token", response.data.token);
+        sessionStorage.setItem("role", response.data.student.role);
     }
 
     return response.data;
@@ -18,4 +19,5 @@ export async function loginStudent(credentials) {
 
 export function logoutStudent() {
     sessionStorage.removeItem("token");
+    sessionStorage.removeItem("role");
 }

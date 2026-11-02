@@ -1,43 +1,146 @@
-const {
-    getAllEnrollments,
-    getEnrollmentById,
-    createEnrollment,
-    updateEnrollment,
-    deleteEnrollment
-} = require("../services/enrollmentService");
+const mongoose = require("mongoose");
+const Enrollment = require("../models/Enrollment");
+const Course = require("../models/Course");
 
-const getEnrollments = (req, res) => {
-    const enrollments = getAllEnrollments();
-    res.status(200).json({ success: true, count: enrollments.length, data: enrollments });
-};
+async function enrollCourse(req, res, next) {
+    try {
+        const studentId = req.user.sub;
+        const { courseId } = req.body;
 
-const getEnrollment = (req, res) => {
-    const enrollment = getEnrollmentById(req.params.id);
-    if (!enrollment) {
-        return res.status(404).json({ success: false, message: "Enrollment not found" });
+        if (!mongoose.isValidObjectId(studentId)) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid student identity"
+            });
+        }
+
+        if (typeof courseId !== "string" || !courseId.trim()) {
+            return res.status(400).json({
+                success: false,
+                message: "Valid course ID is required"
+            });
+        }
+
+        const course = await Course.findById(courseId);
+
+        if (!course) {
+            return res.status(404).json({
+                success: false,
+                message: "Course not found"
+            });
+        }
+
+        const existingEnrollment = await Enrollment.findOne({
+            student: studentId,
+            course: courseId
+        });
+
+        if (existingEnrollment && existingEnrollment.status === "withdrawn") {
+            existingEnrollment.status = "active";
+            existingEnrollment.enrolledAt = new Date();
+            await existingEnrollment.save();
+
+            return res.status(201).json({
+                success: true,
+                message: "Course enrollment successful",
+                enrollment: existingEnrollment
+            });
+        }
+
+        if (existingEnrollment) {
+            return res.status(409).json({
+                success: false,
+                message: "Already enrolled in this course"
+            });
+        }
+
+        const enrollment = await Enrollment.create({
+            student: studentId,
+            course: courseId
+        });
+
+        return res.status(201).json({
+            success: true,
+            message: "Course enrollment successful",
+            enrollment
+        });
+    } catch (error) {
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "Already enrolled in this course"
+            });
+        }
+
+        next(error);
     }
-    res.status(200).json({ success: true, data: enrollment });
-};
+}
 
-const addEnrollment = (req, res) => {
-    const newEnrollment = createEnrollment(req.body);
-    res.status(201).json({ success: true, message: "Enrollment created successfully", data: newEnrollment });
-};
+async function getMyCourses(req, res, next) {
+    try {
+        const studentId = req.user.sub;
 
-const editEnrollment = (req, res) => {
-    const updatedEnrollment = updateEnrollment(req.params.id, req.body);
-    if (!updatedEnrollment) {
-        return res.status(404).json({ success: false, message: "Enrollment not found" });
+        if (!mongoose.isValidObjectId(studentId)) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid student identity"
+            });
+        }
+
+        const enrollments = await Enrollment.find({
+            student: studentId,
+            status: { $in: ["active", "completed"] }
+        })
+            .populate("course")
+            .sort({ enrolledAt: -1 });
+
+        return res.status(200).json({
+            success: true,
+            message: "Enrolled courses fetched successfully",
+            totalEnrollments: enrollments.length,
+            enrollments
+        });
+    } catch (error) {
+        next(error);
     }
-    res.status(200).json({ success: true, message: "Enrollment updated successfully", data: updatedEnrollment });
-};
+}
 
-const removeEnrollment = (req, res) => {
-    const deleted = deleteEnrollment(req.params.id);
-    if (!deleted) {
-        return res.status(404).json({ success: false, message: "Enrollment not found" });
+async function unenrollCourse(req, res, next) {
+    try {
+        const studentId = req.user.sub;
+        const { courseId } = req.params;
+
+        if (!mongoose.isValidObjectId(studentId) || !courseId) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid student or course ID"
+            });
+        }
+
+        const enrollment = await Enrollment.findOneAndUpdate(
+            {
+                student: studentId,
+                course: courseId,
+                status: { $in: ["active", "completed"] }
+            },
+            { $set: { status: "withdrawn" } },
+            { returnDocument: "after" }
+        );
+
+        if (!enrollment) {
+            return res.status(404).json({
+                success: false,
+                message: "You are not enrolled in this course"
+            });
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Successfully unenrolled from course"
+        });
+    } catch (error) {
+        next(error);
     }
-    res.status(200).json({ success: true, message: "Enrollment deleted successfully" });
-};
+}
 
-module.exports = { getEnrollments, getEnrollment, addEnrollment, editEnrollment, removeEnrollment };
+module.exports = { enrollCourse, getMyCourses, unenrollCourse };

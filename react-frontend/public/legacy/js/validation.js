@@ -21,7 +21,7 @@
 
     function isValidPassword(password) {
         var length = (password || '').toString().length;
-        return length >= 8 && length <= 72;
+        return length >= 12 && length <= 72;
     }
 
     // Keys match each form's input `id` attributes, so callers can hand the
@@ -42,7 +42,7 @@
         if (!isNonEmpty(data.program)) errors.program = 'Please select a program.';
         if (!isValidEmail(data.email)) errors.email = 'Enter a valid email address.';
         if (!isValidPassword(data.password)) {
-            errors.password = 'Password must be between 8 and 72 characters.';
+            errors.password = 'Password must be between 12 and 72 characters.';
         } else if (!passwordsMatch(data.password, data.confirmPassword)) {
             errors['confirm-password'] = 'Passwords do not match.';
         }
@@ -53,7 +53,7 @@
         var errors = {};
         if (!isValidEmail(data.email)) errors.email = 'Enter the email address on your account.';
         if (!isValidPassword(data.password)) {
-            errors.password = 'Password must be between 8 and 72 characters.';
+            errors.password = 'Password must be between 12 and 72 characters.';
         } else if (!passwordsMatch(data.password, data.confirmPassword)) {
             errors['confirm-password'] = 'Passwords do not match.';
         }

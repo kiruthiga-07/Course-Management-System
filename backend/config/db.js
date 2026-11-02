@@ -1,6 +1,16 @@
-const path = require("path");
+const mongoose = require("mongoose");
 
-module.exports = {
-    DB_PATH: path.join(__dirname, "..", "data", "db.json"),
-    PORT: process.env.PORT || 5000
-};
+const PORT = process.env.PORT || 5000;
+
+async function connectDB() {
+    const mongoUri = process.env.MONGO_URI;
+
+    if (!mongoUri) {
+        throw new Error("MONGO_URI is not configured in .env");
+    }
+
+    await mongoose.connect(mongoUri);
+    console.log("MongoDB connected: " + mongoose.connection.name);
+}
+
+module.exports = { PORT, connectDB };

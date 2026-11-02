@@ -1,6 +1,7 @@
 (function (window) {
     var SESSION_KEY = 'edutrack_current_student';
     var TOKEN_KEY = 'token';
+    var ROLE_KEY = 'role';
 
     function baseUrl() {
         return (window.EduTrackServer && window.EduTrackServer.baseUrl) || 'http://localhost:5000/api/v1';
@@ -50,6 +51,14 @@
         }
     }
 
+    function saveRole(role) {
+        try {
+            sessionStorage.setItem(ROLE_KEY, role || 'student');
+        } catch (err) {
+            return;
+        }
+    }
+
     function saveSession(student) {
         localStorage.setItem(SESSION_KEY, JSON.stringify(student));
         return Promise.resolve(student);
@@ -59,6 +68,7 @@
         localStorage.removeItem(SESSION_KEY);
         try {
             sessionStorage.removeItem(TOKEN_KEY);
+            sessionStorage.removeItem(ROLE_KEY);
         } catch (err) {
             return Promise.resolve();
         }
@@ -90,6 +100,7 @@
         saveSession: saveSession,
         clearSession: clearSession,
         saveToken: saveToken,
+        saveRole: saveRole,
         getToken: getToken
     };
 })(window);

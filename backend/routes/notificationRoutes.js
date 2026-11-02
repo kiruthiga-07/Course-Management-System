@@ -1,0 +1,49 @@
+const express = require("express");
+const mongoose = require("mongoose");
+
+const Notification = require("../models/Notification");
+const { authenticateToken } = require("../middleware/authMiddleware");
+
+const router = express.Router();
+
+router.get("/", authenticateToken, async (req, res, next) => {
+    try {
+        const notifications = await Notification.find({
+            recipient: req.user.sub
+        })
+            .sort({ createdAt: -1 })
+            .limit(50)
+            .lean();
+
+        res.json({ success: true, notifications });
+    } catch (error) {
+        next(error);
+    }
+});
+
+router.patch("/:id/read", authenticateToken, async (req, res, next) => {
+    try {
+        if (!mongoose.isValidObjectId(req.params.id)) {
+            return res.status(400).json({ success: false, message: "Invalid notification ID" });
+        }
+
+        const notification = await Notification.findOneAndUpdate(
+            {
+                _id: req.params.id,
+                recipient: req.user.sub
+            },
+            { $set: { isRead: true } },
+            { returnDocument: "after" }
+        );
+
+        if (!notification) {
+            return res.status(404).json({ success: false, message: "Notification not found" });
+        }
+
+        res.json({ success: true, notification });
+    } catch (error) {
+        next(error);
+    }
+});
+
+module.exports = router;

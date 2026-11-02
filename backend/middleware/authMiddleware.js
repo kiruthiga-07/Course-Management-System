@@ -27,11 +27,13 @@ function authenticateToken(req, res, next) {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ["HS256"] });
 
         req.user = {
             id: decoded.sub,
-            email: decoded.email
+            sub: decoded.sub,
+            email: decoded.email,
+            role: decoded.role
         };
 
         next();

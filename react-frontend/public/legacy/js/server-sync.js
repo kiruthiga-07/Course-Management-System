@@ -1,18 +1,12 @@
 (function (window) {
-    var BASE_URL = 'http://localhost:5000/api/v1';
+    var BASE_URL = window.EDUTRACK_API_URL || 'http://localhost:5000/api/v1';
     var COLLECTIONS = {
         edutrack_courses: 'courses',
-        edutrack_enrollments: 'enrollments'
+        edutrack_enrollments: 'legacy-enrollments'
     };
     var TOKEN_KEY = 'token';
     var STUDENT_SESSION_KEY = 'edutrack_current_student';
     var ADMIN_FLAG_KEY = 'isAdminVerified';
-    var ADMIN_ACCOUNT = {
-        name: 'Administrator',
-        email: 'admin@institute.edu',
-        password: '12341234',
-        department: 'Administration'
-    };
     var MAX_AGE_MS = 1000;
     var BANNER_ID = 'edutrack-api-banner';
     var store = {};
@@ -42,6 +36,7 @@
     function clearToken() {
         try {
             window.sessionStorage.removeItem(TOKEN_KEY);
+            window.sessionStorage.removeItem('role');
         } catch (err) {
             return;
         }
@@ -96,27 +91,10 @@
         return { status: xhr.status, data: data };
     }
 
-    function loginAdmin() {
-        var credentials = { email: ADMIN_ACCOUNT.email, password: ADMIN_ACCOUNT.password };
-        var result = send('POST', '/auth/login', credentials);
-        if (result.status === 401) {
-            var created = send('POST', '/auth/register', ADMIN_ACCOUNT);
-            if (created.status !== 201 && created.status !== 409) {
-                return false;
-            }
-            result = send('POST', '/auth/login', credentials);
-        }
-        if (result.status === 200 && result.data && result.data.token) {
-            setToken(result.data.token);
-            return true;
-        }
-        return false;
-    }
-
     function request(method, path, body) {
         var result = send(method, path, body);
-        if (result.status === 401 && method !== 'GET' && isAdminSession() && loginAdmin()) {
-            result = send(method, path, body);
+        if (result.status === 401 && method !== 'GET' && isAdminSession()) {
+            throw new Error('Your admin session has expired. Please log in again.');
         }
         if (result.status < 200 || result.status >= 300) {
             var message = (result.data && result.data.message) || (method + ' ' + path + ' failed with status ' + result.status);

@@ -560,7 +560,7 @@ EduTrack.currentPage = (function () {
    ever drawn on screen. It is intentionally NOT deferred to DOMContentLoaded. */
 if (EduTrack.currentPage === 'edit-course') {
 // Gate this page behind the admin login. Runs before the body renders.
-        if (localStorage.getItem('isAdminVerified') !== 'true') {
+        if (localStorage.getItem('isAdminVerified') !== 'true' || sessionStorage.getItem('role') !== 'admin') {
             window.location.replace('admin-schema-login.html');
         }
 }
@@ -841,6 +841,32 @@ EduTrack.pages['admin-dashboard'] = function () {
         })();
 };
 
+/* ---------- admin sign-in against the real API ---------- */
+EduTrack.adminSignIn = function (email, password, redirectTo) {
+    var base = (window.EduTrackServer && window.EduTrackServer.baseUrl) || 'http://localhost:5000/api/v1';
+    fetch(base + '/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, password: password })
+    }).then(function (response) {
+        return response.json().catch(function () { return {}; }).then(function (data) {
+            return { ok: response.ok, data: data };
+        });
+    }).then(function (result) {
+        if (!result.ok || !result.data.token || !result.data.student || result.data.student.role !== 'admin') {
+            alert('Invalid Security Tokens. Elevated access structure rejected.');
+            return;
+        }
+        localStorage.removeItem('edutrack_current_student');
+        sessionStorage.setItem('token', result.data.token);
+        sessionStorage.setItem('role', 'admin');
+        localStorage.setItem('isAdminVerified', 'true');
+        window.location.href = redirectTo;
+    }).catch(function () {
+        alert('Cannot reach the backend. Start it with "npm run dev" in the backend folder.');
+    });
+};
+
 /* ---------- admin-login ---------- */
 EduTrack.pages['admin-login'] = function () {
 document.getElementById('adminLoginForm').addEventListener('submit', function (event) {
@@ -849,15 +875,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', function (e
             var email = document.getElementById('email').value;
             var pass = document.getElementById('password').value;
 
-            // NOTE: this project doesn't have a real authentication backend
-            // wired up yet, so this simply checks against a fixed admin
-            // credential pair.
-            if (email === "admin@institute.edu" && pass === "12341234") {
-                localStorage.setItem("isAdminVerified", "true");
-                window.location.href = "admin-dashboard.html";
-            } else {
-                alert("Invalid Security Tokens. Elevated access structure rejected.");
-            }
+            EduTrack.adminSignIn(email, pass, "admin-dashboard.html");
         });
 };
 
@@ -869,14 +887,7 @@ document.getElementById('adminLoginForm').addEventListener('submit', function(ev
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-pass').value;
 
-            // Verification logic
-            if (email === "admin@institute.edu" && pass === "12341234") {
-                localStorage.setItem("isAdminVerified", "true");
-                // Redirect to the edit page
-                window.location.href = "edit-course.html";
-            } else {
-                alert("Invalid Security Tokens. Elevated access structure rejected.");
-            }
+            EduTrack.adminSignIn(email, pass, "edit-course.html");
         });
 };
 
@@ -969,9 +980,222 @@ EduTrack.pages['course'] = function () {
                 }
             }
 
-            // Generates and downloads a "Certificate of Completion" PDF for
-            // this enrollment. Only ever called when the course offers a
-            // certificate AND the enrollment is fully completed.
+            function drawCertificate(doc, info) {
+                var W = doc.internal.pageSize.getWidth();
+                var H = doc.internal.pageSize.getHeight();
+
+                function mix(a, b, t) {
+                    return [
+                        Math.round(a[0] + (b[0] - a[0]) * t),
+                        Math.round(a[1] + (b[1] - a[1]) * t),
+                        Math.round(a[2] + (b[2] - a[2]) * t)
+                    ];
+                }
+
+                function fill(c) {
+                    doc.setFillColor(c[0], c[1], c[2]);
+                }
+
+                function text(c) {
+                    doc.setTextColor(c[0], c[1], c[2]);
+                }
+
+                var green = [27, 84, 46];
+                var goldDark = [140, 104, 36];
+                var goldMid = [201, 162, 74];
+                var goldLight = [244, 222, 148];
+                var ink = [48, 48, 52];
+                var grey = [110, 112, 118];
+
+                fill([244, 245, 247]);
+                doc.rect(0, 0, W, H, 'F');
+
+                var x;
+                for (x = 230; x < W; x += 2) {
+                    var t = (x - 230) / (W - 230);
+                    fill(mix([250, 251, 252], [226, 229, 233], Math.sin(t * Math.PI)));
+                    doc.rect(x, 0, 2.5, H, 'F');
+                }
+
+                var panelW = 216;
+                var cell = 54;
+                var seed = 7;
+                function rand() {
+                    seed = (seed * 9301 + 49297) % 233280;
+                    return seed / 233280;
+                }
+                var dark = [10, 58, 28];
+                var light = [58, 140, 70];
+                var row;
+                var col;
+                for (row = 0; row * cell < H + cell; row++) {
+                    for (col = 0; col * cell < panelW; col++) {
+                        var x0 = col * cell;
+                        var y0 = row * cell;
+                        var jitter = 0;
+                        fill(mix(dark, light, Math.min(1, Math.max(0, rand() * 0.9))));
+                        doc.triangle(x0, y0, x0 + cell, y0, x0, y0 + cell + jitter, 'F');
+                        fill(mix(dark, light, Math.min(1, Math.max(0, rand() * 0.9))));
+                        doc.triangle(x0 + cell, y0, x0 + cell, y0 + cell + jitter, x0, y0 + cell + jitter, 'F');
+                    }
+                }
+
+                function ribbon(x1, width) {
+                    var i;
+                    for (i = 0; i < width; i += 1) {
+                        var p = i / width;
+                        var c = p < 0.5
+                            ? mix(goldDark, goldLight, p * 2)
+                            : mix(goldLight, goldDark, (p - 0.5) * 2);
+                        fill(c);
+                        doc.rect(x1 + i, 0, 1.4, H, 'F');
+                    }
+                }
+
+                ribbon(176, 34);
+                ribbon(216, 34);
+
+                var cx = 213;
+                var cy = 262;
+                var points = 40;
+                var star = [];
+                var k;
+                for (k = 0; k < points * 2; k++) {
+                    var rad = k % 2 === 0 ? 70 : 62;
+                    var ang = (Math.PI * k) / points;
+                    star.push([cx + rad * Math.cos(ang), cy + rad * Math.sin(ang)]);
+                }
+                var segs = [];
+                for (k = 1; k < star.length; k++) {
+                    segs.push([star[k][0] - star[k - 1][0], star[k][1] - star[k - 1][1]]);
+                }
+                fill([22, 104, 48]);
+                doc.lines(segs, star[0][0], star[0][1], [1, 1], 'F', true);
+
+                var r;
+                for (r = 58; r > 0; r -= 1) {
+                    fill(mix(goldLight, goldDark, Math.pow(r / 58, 1.4)));
+                    doc.circle(cx, cy, r, 'F');
+                }
+                for (r = 52; r > 0; r -= 1) {
+                    fill(mix(goldDark, goldLight, Math.pow(r / 52, 1.6)));
+                    doc.circle(cx - 3, cy - 3, r * 0.92, 'F');
+                }
+                doc.setDrawColor(goldDark[0], goldDark[1], goldDark[2]);
+                doc.setLineWidth(1.2);
+                doc.circle(cx, cy, 45, 'S');
+                doc.setLineWidth(0.6);
+                doc.circle(cx, cy, 36, 'S');
+
+                for (k = 0; k < 28; k++) {
+                    var da = (Math.PI * 2 * k) / 28;
+                    fill(goldDark);
+                    doc.circle(cx + 40.5 * Math.cos(da), cy + 40.5 * Math.sin(da), 1.1, 'F');
+                }
+
+                text(goldDark);
+                doc.setFont('times', 'bold');
+                doc.setFontSize(28);
+                doc.text('ET', cx, cy + 4, { align: 'center' });
+                doc.setFontSize(7.5);
+                doc.text('EDUTRACK', cx, cy + 18, { align: 'center', charSpace: 1.2 });
+
+                doc.setDrawColor(goldMid[0], goldMid[1], goldMid[2]);
+                doc.setLineWidth(1.4);
+                doc.rect(10, 10, W - 20, H - 20, 'S');
+
+                var mid = 548;
+
+                text(green);
+                doc.setFont('times', 'bold');
+                doc.setFontSize(22);
+                doc.text('EduTrack', W - 52, 56, { align: 'right' });
+                fill(goldMid);
+                doc.circle(W - 46, 56, 2.6, 'F');
+
+                text(green);
+                doc.setFont('times', 'bold');
+                doc.setFontSize(50);
+                doc.text('CERTIFICATE', mid, 150, { align: 'center', charSpace: 4 });
+
+                text(goldDark);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(15);
+                doc.text('OF ' + info.kind, mid, 180, { align: 'center', charSpace: 6 });
+
+                text(grey);
+                doc.setFontSize(8.5);
+                doc.text('THIS CERTIFICATE IS PROUDLY PRESENTED TO', mid, 218, { align: 'center', charSpace: 1 });
+
+                text(ink);
+                doc.setFont('times', 'bolditalic');
+                var nameSize = 44;
+                doc.setFontSize(nameSize);
+                while (doc.getTextWidth(info.name) > 470 && nameSize > 20) {
+                    nameSize -= 2;
+                    doc.setFontSize(nameSize);
+                }
+                doc.text(info.name, mid, 266, { align: 'center' });
+
+                doc.setDrawColor(150, 152, 158);
+                doc.setLineWidth(0.8);
+                doc.line(mid - 250, 280, mid + 250, 280);
+
+                text(grey);
+                doc.setFont('times', 'italic');
+                doc.setFontSize(13);
+                doc.text('for successfully completing all modules of the course', mid, 312, { align: 'center' });
+
+                text(green);
+                doc.setFont('times', 'bold');
+                var courseSize = 26;
+                doc.setFontSize(courseSize);
+                while (doc.getTextWidth(info.course) > 480 && courseSize > 14) {
+                    courseSize -= 1;
+                    doc.setFontSize(courseSize);
+                }
+                doc.text(info.course, mid, 346, { align: 'center' });
+
+                text(grey);
+                doc.setFont('times', 'italic');
+                doc.setFontSize(12);
+                doc.text('offered by EduTrack, in recognition of dedication, effort and commitment to learning.', mid, 374, { align: 'center' });
+
+                var baseY = 470;
+
+                text(ink);
+                doc.setFont('times', 'normal');
+                doc.setFontSize(15);
+                doc.text(info.date, 400, baseY - 6, { align: 'center' });
+                doc.setDrawColor(120, 122, 128);
+                doc.setLineWidth(0.8);
+                doc.line(310, baseY, 490, baseY);
+                text(grey);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                doc.text('DATE OF COMPLETION', 400, baseY + 15, { align: 'center', charSpace: 1 });
+
+                text([26, 48, 104]);
+                doc.setFont('times', 'bolditalic');
+                var signSize = 26;
+                doc.setFontSize(signSize);
+                while (doc.getTextWidth(info.instructor) > 190 && signSize > 12) {
+                    signSize -= 1;
+                    doc.setFontSize(signSize);
+                }
+                doc.text(info.instructor, 690, baseY - 8, { align: 'center', angle: 0 });
+                doc.setDrawColor(120, 122, 128);
+                doc.line(590, baseY, 790, baseY);
+                text(ink);
+                doc.setFont('times', 'bold');
+                doc.setFontSize(11);
+                doc.text(info.instructor, 690, baseY + 14, { align: 'center' });
+                text(grey);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(8.5);
+                doc.text('COURSE INSTRUCTOR', 690, baseY + 28, { align: 'center', charSpace: 1 });
+            }
+
             function downloadCertificate(enrollment) {
                 if (!window.jspdf || !window.jspdf.jsPDF) {
                     window.alert('Certificate generator failed to load.');
@@ -979,69 +1203,21 @@ EduTrack.pages['course'] = function () {
                 }
 
                 var studentName = enrollment.studentName || (student && student.studentName) || 'Student';
-                var courseTitle = course.title;
-                var orgName = 'EduTrack';
-                var dateStr = new Date(enrollment.completedAt || Date.now()).toLocaleDateString(undefined, {
+                var dateStr = new Date(enrollment.completedAt || Date.now()).toLocaleDateString('en-GB', {
                     year: 'numeric', month: 'long', day: 'numeric'
                 });
 
                 var doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
-                var pageWidth = doc.internal.pageSize.getWidth();
-                var pageHeight = doc.internal.pageSize.getHeight();
 
-                var navy = [21, 35, 64];
-                var gold = [196, 155, 74];
+                drawCertificate(doc, {
+                    kind: 'COMPLETION',
+                    name: studentName,
+                    course: course.title,
+                    instructor: course.instructor || 'Course Instructor',
+                    date: dateStr
+                });
 
-                // Decorative Borders
-                doc.setDrawColor(navy[0], navy[1], navy[2]);
-                doc.setLineWidth(5);
-                doc.rect(20, 20, pageWidth - 40, pageHeight - 40);
-                doc.setDrawColor(gold[0], gold[1], gold[2]);
-                doc.setLineWidth(1);
-                doc.rect(30, 30, pageWidth - 60, pageHeight - 60);
-
-                // Organization Header
-                doc.setTextColor(navy[0], navy[1], navy[2]);
-                doc.setFont('times', 'bold');
-                doc.setFontSize(18);
-                doc.text(orgName.toUpperCase(), pageWidth / 2, 100, { align: 'center' });
-
-                // Main Title
-                doc.setFontSize(48);
-                doc.text('Certificate of Completion', pageWidth / 2, 180, { align: 'center' });
-
-                // Subtitle
-                doc.setFont('times', 'italic');
-                doc.setFontSize(18);
-                doc.text('This is to certify that', pageWidth / 2, 240, { align: 'center' });
-
-                // Student Name
-                doc.setFont('times', 'bold');
-                doc.setFontSize(40);
-                doc.setTextColor(gold[0], gold[1], gold[2]);
-                doc.text(studentName, pageWidth / 2, 300, { align: 'center' });
-                
-                // Underline for name
-                doc.line(pageWidth / 2 - 200, 315, pageWidth / 2 + 200, 315);
-
-                // Body Text
-                doc.setTextColor(navy[0], navy[1], navy[2]);
-                doc.setFont('times', 'normal');
-                doc.setFontSize(18);
-                doc.text('has successfully completed the course requirements for', pageWidth / 2, 370, { align: 'center' });
-
-                // Course Title
-                doc.setFont('times', 'bold');
-                doc.setFontSize(28);
-                doc.text(courseTitle, pageWidth / 2, 420, { align: 'center' });
-
-                // Footer Dates
-                doc.setFont('times', 'normal');
-                doc.setFontSize(14);
-                doc.text('Awarded on ' + dateStr, pageWidth / 2, pageHeight - 100, { align: 'center' });
-                doc.text(orgName + ' Systems', pageWidth / 2, pageHeight - 80, { align: 'center' });
-
-                doc.save((courseTitle + '-Certificate.pdf').replace(/[^a-z0-9]+/gi, '_'));
+                doc.save((course.title + ' Certificate').replace(/[^a-z0-9]+/gi, '_') + '.pdf');
             }
 
             function updateProgressUI(enrollment) {
@@ -1229,11 +1405,16 @@ EduTrack.pages['courses'] = function () {
                 var E = window.EduTrackEnrollments;
                 var student = E && E.getCurrentStudent && E.getCurrentStudent();
                 var enrolled = !!(student && student.rollNo && E.isEnrolled(student.rollNo, course.id));
-                var isAdmin = localStorage.getItem('isAdminVerified') === 'true';
+                var isAdmin = localStorage.getItem('isAdminVerified') === 'true' && sessionStorage.getItem('role') === 'admin';
 
                 var primaryActionHTML = enrolled
                     ? '<a href="course.html?course=' + encodeURIComponent(course.id) + '" class="btn btn-primary btn-start-learning">Start Learning</a>'
                     : '<a href="stu-login-enroll.html?course=' + encodeURIComponent(course.id) + '&title=' + encodeURIComponent(course.title) + '&field=' + encodeURIComponent(course.field) + '" class="btn btn-primary btn-enroll">Enroll</a>';
+
+                var isStudentRole = sessionStorage.getItem('role') === 'student';
+                var enrollNowHTML = isStudentRole
+                    ? '<button type="button" class="btn btn-primary btn-enroll-now" data-course-id="' + escapeHtml(course.id) + '">Enroll Now</button>'
+                    : '';
 
                 var editSchemaHTML = isAdmin
                     ? '<a href="admin-schema-login.html" class="btn btn-edit">Edit Schema</a>'
@@ -1254,6 +1435,7 @@ EduTrack.pages['courses'] = function () {
                         '</ul>' +
                         '<div class="course-card-actions">' +
                             primaryActionHTML +
+                            enrollNowHTML +
                             editSchemaHTML +
                         '</div>' +
                     '</div>';
@@ -1345,10 +1527,33 @@ EduTrack.pages['courses'] = function () {
                 });
             }
 
+            function setupEnrollNow() {
+                document.addEventListener('click', function (e) {
+                    var button = e.target.closest ? e.target.closest('.btn-enroll-now') : null;
+                    if (!button) return;
+                    var base = (window.EduTrackServer && window.EduTrackServer.baseUrl) || 'http://localhost:5000/api/v1';
+                    fetch(base + '/enrollments', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + sessionStorage.getItem('token')
+                        },
+                        body: JSON.stringify({ courseId: button.getAttribute('data-course-id') })
+                    }).then(function (response) {
+                        return response.json().catch(function () { return {}; });
+                    }).then(function (data) {
+                        alert(data.message || 'Unable to enroll in this course');
+                    }).catch(function () {
+                        alert('Unable to enroll in this course');
+                    });
+                });
+            }
+
             renderCourses();
             setupSearch();
             setupAuthUI();
             setupEnrollGate();
+            setupEnrollNow();
         })();
 };
 

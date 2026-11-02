@@ -14,6 +14,8 @@ import ResetPassword from "./pages/ResetPassword";
 import LoginSelection from "./pages/LoginSelection";
 import Notifications from "./pages/Notifications";
 import StudentEnroll from "./pages/StudentEnroll";
+import MyLearning from "./pages/MyLearning";
+import Messages from "./pages/Messages";
 
 /*
  * Every route is registered both "clean" (/courses) and with the original
@@ -71,6 +73,12 @@ function App() {
 
             <Route path="/stu-login-enroll" element={<StudentEnroll />} />
             <Route path="/stu-login-enroll.html" element={<StudentEnroll />} />
+
+            <Route path="/my-learning" element={<MyLearning />} />
+            <Route path="/my-learning.html" element={<MyLearning />} />
+
+            <Route path="/messages" element={<Messages />} />
+            <Route path="/messages.html" element={<Messages />} />
         </Routes>
     );
 }

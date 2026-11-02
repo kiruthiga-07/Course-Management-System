@@ -1,6 +1,5 @@
 const bcrypt = require("bcryptjs");
-const { randomUUID } = require("crypto");
-const { readDB, writeDB } = require("../models/db");
+const User = require("../models/User");
 
 const SALT_ROUNDS = 12;
 
@@ -14,16 +13,17 @@ function normalizeEmail(email) {
     return email.trim().toLowerCase();
 }
 
-function toPublicStudent(student) {
+function toPublicStudent(user) {
     const publicStudent = {
-        id: student.id,
-        name: student.name,
-        email: student.email,
-        department: student.department
+        id: String(user._id),
+        name: user.name,
+        email: user.email,
+        department: user.department,
+        role: user.role || "student"
     };
 
-    if (student.rollNo) {
-        publicStudent.rollNo = student.rollNo;
+    if (user.rollNo) {
+        publicStudent.rollNo = user.rollNo;
     }
 
     return publicStudent;
@@ -32,81 +32,62 @@ function toPublicStudent(student) {
 async function registerStudent({ name, email, password, department, rollNo }) {
     const normalizedEmail = normalizeEmail(email);
 
-    if (readDB().students.some((student) => student.email === normalizedEmail)) {
+    if (await User.findOne({ email: normalizedEmail })) {
         throw createError("Email is already registered", 409);
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    const db = readDB();
-
-    if (db.students.some((student) => student.email === normalizedEmail)) {
-        throw createError("Email is already registered", 409);
-    }
-
-    const student = {
-        id: randomUUID(),
+    const data = {
         name: name.trim(),
         email: normalizedEmail,
         passwordHash,
         department: department.trim(),
-        createdAt: new Date().toISOString()
+        role: "student"
     };
 
     if (typeof rollNo === "string" && rollNo.trim()) {
-        student.rollNo = rollNo.trim();
+        data.rollNo = rollNo.trim();
     }
 
-    db.students.push(student);
-    writeDB(db);
+    let user;
+    try {
+        user = await User.create(data);
+    } catch (error) {
+        if (error.code === 11000) {
+            throw createError("Email is already registered", 409);
+        }
+        throw error;
+    }
 
-    return { ...toPublicStudent(student), createdAt: student.createdAt };
+    return { ...toPublicStudent(user), createdAt: user.createdAt };
 }
 
 async function loginStudent({ email, password }) {
-    const normalizedEmail = normalizeEmail(email);
+    const user = await User.findOne({ email: normalizeEmail(email) });
 
-    const student = readDB().students.find(
-        (item) => item.email === normalizedEmail
-    );
-
-    if (!student || !student.passwordHash) {
+    if (!user || !user.passwordHash) {
         throw createError("Invalid email or password", 401);
     }
 
-    const passwordMatches = await bcrypt.compare(password, student.passwordHash);
+    const passwordMatches = await bcrypt.compare(password, user.passwordHash);
 
     if (!passwordMatches) {
         throw createError("Invalid email or password", 401);
     }
 
-    return toPublicStudent(student);
+    return toPublicStudent(user);
 }
 
 async function resetStudentPassword({ email, password }) {
-    const normalizedEmail = normalizeEmail(email);
+    const user = await User.findOne({ email: normalizeEmail(email) });
 
-    const exists = readDB().students.some(
-        (student) => student.email === normalizedEmail && student.passwordHash
-    );
-
-    if (!exists) {
+    if (!user) {
         throw createError("No account found for that email", 404);
     }
 
-    const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-
-    const db = readDB();
-    const index = db.students.findIndex(
-        (student) => student.email === normalizedEmail
-    );
-
-    if (index === -1) {
-        throw createError("No account found for that email", 404);
-    }
-
-    db.students[index] = { ...db.students[index], passwordHash };
-    writeDB(db);
+    user.passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
+    await user.save();
 }
 
 module.exports = {

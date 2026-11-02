@@ -1,19 +1,34 @@
 const express = require("express");
-const {
-    getEnrollments,
-    getEnrollment,
-    addEnrollment,
-    editEnrollment,
-    removeEnrollment
-} = require("../controllers/enrollmentController");
-
 const router = express.Router();
 
-router.get("/", getEnrollments);
-router.get("/:id", getEnrollment);
-router.post("/", addEnrollment);
-router.put("/:id", editEnrollment);
-router.patch("/:id", editEnrollment);
-router.delete("/:id", removeEnrollment);
+const { authenticateToken } = require("../middleware/authMiddleware");
+const authorizeRoles = require("../middleware/roleMiddleware");
+
+const {
+    enrollCourse,
+    getMyCourses,
+    unenrollCourse
+} = require("../controllers/enrollmentController");
+
+router.get(
+    "/my-courses",
+    authenticateToken,
+    authorizeRoles("student"),
+    getMyCourses
+);
+
+router.post(
+    "/",
+    authenticateToken,
+    authorizeRoles("student"),
+    enrollCourse
+);
+
+router.delete(
+    "/:courseId",
+    authenticateToken,
+    authorizeRoles("student"),
+    unenrollCourse
+);
 
 module.exports = router;

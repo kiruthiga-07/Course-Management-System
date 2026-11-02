@@ -291,12 +291,13 @@
   ],
   "students": [
     {
-      "id": "b85a0dae-530e-4a1e-b05d-27d47508f12a",
-      "name": "Arun Kumar",
-      "email": "arun@example.com",
-      "passwordHash": "$2b$12$aBFoIWl87UHEb6isS264ZeyJEyXFXjPggtZF2aTMsbmtDZVyRv71S",
-      "department": "Computer Science",
-      "createdAt": "2026-10-26T08:30:29.561Z"
+      "id": "33035eed-9279-425d-b0ba-d4a939572ba2",
+      "name": "Administrator",
+      "email": "admin@institute.edu",
+      "passwordHash": "$2b$12$uJHlvylaxKoKMo1Xg2nVyeJjr/Mwq3K9p8acgIXqdMDo2Mt5KOPea",
+      "department": "Administration",
+      "role": "admin",
+      "createdAt": "2026-10-27T09:21:07.599Z"
     }
   ],
   "enrollments": []

@@ -561,7 +561,7 @@ EduTrack.currentPage = (function () {
 if (EduTrack.currentPage === 'edit-course') {
 // Gate this page behind the admin login. Runs before the body renders.
         if (localStorage.getItem('isAdminVerified') !== 'true' || sessionStorage.getItem('role') !== 'admin') {
-            window.location.replace('admin-schema-login.html');
+            window.location.replace('admin-schema-login.html' + window.location.search);
         }
 }
 
@@ -881,13 +881,18 @@ document.getElementById('adminLoginForm').addEventListener('submit', function (e
 
 /* ---------- admin-schema-login ---------- */
 EduTrack.pages['admin-schema-login'] = function () {
+var schemaTarget = 'edit-course.html' + window.location.search;
+if (localStorage.getItem('isAdminVerified') === 'true' && sessionStorage.getItem('role') === 'admin' && sessionStorage.getItem('token')) {
+    window.location.replace(schemaTarget);
+    return;
+}
 document.getElementById('adminLoginForm').addEventListener('submit', function(event) {
             event.preventDefault();
             
             const email = document.getElementById('admin-email').value;
             const pass = document.getElementById('admin-pass').value;
 
-            EduTrack.adminSignIn(email, pass, "edit-course.html");
+            EduTrack.adminSignIn(email, pass, schemaTarget);
         });
 };
 
@@ -1417,7 +1422,7 @@ EduTrack.pages['courses'] = function () {
                     : '';
 
                 var editSchemaHTML = isAdmin
-                    ? '<a href="admin-schema-login.html" class="btn btn-edit">Edit Schema</a>'
+                    ? '<a href="edit-course.html?course=' + encodeURIComponent(course.id) + '" class="btn btn-edit">Edit Schema</a>'
                     : '';
 
                 return '' +
@@ -1861,6 +1866,11 @@ EduTrack.pages['edit-course'] = function () {
 
             populateStaticSelects();
             resetForm();
+
+            var requestedCourse = new URLSearchParams(window.location.search).get('course');
+            if (requestedCourse && data.loadCourses().some(function (c) { return String(c.id) === requestedCourse; })) {
+                loadCourseIntoForm(requestedCourse);
+            }
         })();
 };
 

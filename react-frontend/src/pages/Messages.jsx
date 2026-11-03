@@ -12,7 +12,7 @@ export default function Messages() {
         <>
             <PageCss href="/css/app.css" />
             <BodyClass />
-            <Navbar variant="student" />
+            <Navbar variant={sessionStorage.getItem("role") === "admin" ? "admin" : "student"} />
             <header className="msg-hero">
                 <h1>Messages</h1>
                 <p>Chat with other students and get live notifications.</p>

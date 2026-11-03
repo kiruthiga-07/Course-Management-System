@@ -7,7 +7,23 @@ import { Link } from "react-router-dom";
  * document.getElementById / getElementByI to toggle visibility and wire
  * up logout — changing an id here would silently break that logic.
  */
+function adminLogout() {
+    localStorage.removeItem("isAdminVerified");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("role");
+}
+
+function studentLogout() {
+    localStorage.removeItem("edutrack_current_student");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("role");
+}
+
 function Navbar({ variant = "courses" }) {
+    const isAdminSession =
+        sessionStorage.getItem("role") === "admin" &&
+        !!sessionStorage.getItem("token") &&
+        localStorage.getItem("isAdminVerified") === "true";
     const isStudentRole = sessionStorage.getItem("role") === "student";
     const hasToken = !!sessionStorage.getItem("token");
 
@@ -18,8 +34,14 @@ function Navbar({ variant = "courses" }) {
                 <ul className="nav-links">
                     <li><a href="#">Home</a></li>
                     <li><Link to="/courses">Courses</Link></li>
+                    {isAdminSession && <li><Link to="/admin-dashboard">Admin Dashboard</Link></li>}
+                    {isAdminSession && <li><Link to="/messages">Messages</Link></li>}
                 </ul>
-                <Link to="/login-selection" className="btn btn-login">Login / Register</Link>
+                {isAdminSession ? (
+                    <Link to="/login-selection" className="btn btn-login" onClick={adminLogout}>Logout</Link>
+                ) : (
+                    <Link to="/login-selection" className="btn btn-login">Login / Register</Link>
+                )}
             </nav>
         );
     }
@@ -45,9 +67,10 @@ function Navbar({ variant = "courses" }) {
                 <ul className="nav-links">
                     <li><Link to="/">Home</Link></li>
                     <li><Link to="/courses">Courses</Link></li>
+                    <li><Link to="/admin-dashboard">Admin Dashboard</Link></li>
                     <li><Link to="/messages">Messages</Link></li>
                 </ul>
-                <Link to="/login-selection" className="dashboard-logout" id="adminLogoutBtn">Logout</Link>
+                <Link to="/login-selection" className="dashboard-logout" id="adminLogoutBtn" onClick={adminLogout}>Logout</Link>
             </nav>
         );
     }
@@ -63,7 +86,7 @@ function Navbar({ variant = "courses" }) {
                     <li><Link to="/my-learning">My Learning</Link></li>
                     <li><Link to="/messages">Messages</Link></li>
                 </ul>
-                <Link to="/login-selection" className="dashboard-logout" id="logoutLink">Logout</Link>
+                <Link to="/login-selection" className="dashboard-logout" id="logoutLink" onClick={studentLogout}>Logout</Link>
             </nav>
         );
     }
@@ -80,6 +103,9 @@ function Navbar({ variant = "courses" }) {
                 <li id="navDashboardItem" style={{ display: "none" }}>
                     <Link to="/student-dashboard">Dashboard</Link>
                 </li>
+                {isAdminSession && (
+                    <li><Link to="/admin-dashboard">Admin Dashboard</Link></li>
+                )}
                 {isStudentRole && (
                     <li><Link to="/my-learning">My Learning</Link></li>
                 )}
@@ -92,7 +118,11 @@ function Navbar({ variant = "courses" }) {
                     </Link>
                 </li>
             </ul>
-            <Link to="/login-selection" className="btn btn-login" id="navAuthBtn">Login / Register</Link>
+            {isAdminSession ? (
+                <Link to="/login-selection" className="btn btn-login" onClick={adminLogout}>Logout</Link>
+            ) : (
+                <Link to="/login-selection" className="btn btn-login" id="navAuthBtn">Login / Register</Link>
+            )}
         </nav>
     );
 }

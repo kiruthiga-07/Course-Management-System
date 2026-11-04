@@ -1409,21 +1409,20 @@ EduTrack.pages['courses'] = function () {
             function courseCardHTML(course) {
                 var E = window.EduTrackEnrollments;
                 var student = E && E.getCurrentStudent && E.getCurrentStudent();
-                var enrolled = !!(student && student.rollNo && E.isEnrolled(student.rollNo, course.id));
+                var enrollment = (student && student.rollNo) ? E.getEnrollment(student.rollNo, course.id) : null;
                 var isAdmin = localStorage.getItem('isAdminVerified') === 'true' && sessionStorage.getItem('role') === 'admin';
+                var courseLink = 'course.html?course=' + encodeURIComponent(course.id);
 
-                var primaryActionHTML = enrolled
-                    ? '<a href="course.html?course=' + encodeURIComponent(course.id) + '" class="btn btn-primary btn-start-learning">Start Learning</a>'
-                    : '<a href="stu-login-enroll.html?course=' + encodeURIComponent(course.id) + '&title=' + encodeURIComponent(course.title) + '&field=' + encodeURIComponent(course.field) + '" class="btn btn-primary btn-enroll">Enroll</a>';
-
-                var isStudentRole = sessionStorage.getItem('role') === 'student';
-                var enrollNowHTML = isStudentRole
-                    ? '<button type="button" class="btn btn-primary btn-enroll-now" data-course-id="' + escapeHtml(course.id) + '">Enroll Now</button>'
-                    : '';
-
-                var editSchemaHTML = isAdmin
-                    ? '<a href="edit-course.html?course=' + encodeURIComponent(course.id) + '" class="btn btn-edit">Edit Schema</a>'
-                    : '';
+                var actionHTML;
+                if (isAdmin) {
+                    actionHTML = '<a href="edit-course.html?course=' + encodeURIComponent(course.id) + '" class="btn btn-edit">Edit Schema</a>';
+                } else if (enrollment && enrollment.status === 'completed') {
+                    actionHTML = '<a href="' + courseLink + '" class="btn btn-completed">Completed</a>';
+                } else if (enrollment) {
+                    actionHTML = '<a href="' + courseLink + '" class="btn btn-primary btn-start-learning">Start Learning</a>';
+                } else {
+                    actionHTML = '<a href="stu-login-enroll.html?course=' + encodeURIComponent(course.id) + '&title=' + encodeURIComponent(course.title) + '&field=' + encodeURIComponent(course.field) + '" class="btn btn-primary btn-enroll">Enroll</a>';
+                }
 
                 return '' +
                     '<div class="course-card" data-course-id="' + escapeHtml(course.id) + '">' +
@@ -1439,9 +1438,7 @@ EduTrack.pages['courses'] = function () {
                             '<li>Certificate: ' + escapeHtml(course.certificate) + '</li>' +
                         '</ul>' +
                         '<div class="course-card-actions">' +
-                            primaryActionHTML +
-                            enrollNowHTML +
-                            editSchemaHTML +
+                            actionHTML +
                         '</div>' +
                     '</div>';
             }
@@ -1532,33 +1529,10 @@ EduTrack.pages['courses'] = function () {
                 });
             }
 
-            function setupEnrollNow() {
-                document.addEventListener('click', function (e) {
-                    var button = e.target.closest ? e.target.closest('.btn-enroll-now') : null;
-                    if (!button) return;
-                    var base = (window.EduTrackServer && window.EduTrackServer.baseUrl) || 'http://localhost:5000/api/v1';
-                    fetch(base + '/enrollments', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': 'Bearer ' + sessionStorage.getItem('token')
-                        },
-                        body: JSON.stringify({ courseId: button.getAttribute('data-course-id') })
-                    }).then(function (response) {
-                        return response.json().catch(function () { return {}; });
-                    }).then(function (data) {
-                        alert(data.message || 'Unable to enroll in this course');
-                    }).catch(function () {
-                        alert('Unable to enroll in this course');
-                    });
-                });
-            }
-
             renderCourses();
             setupSearch();
             setupAuthUI();
             setupEnrollGate();
-            setupEnrollNow();
         })();
 };
 

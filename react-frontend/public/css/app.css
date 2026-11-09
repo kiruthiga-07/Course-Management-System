@@ -2593,3 +2593,35 @@ body.auth-login-page {
             background-color: var(--navy-100);
             opacity: 1;
         }
+
+.module-card .theory-box {
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 24px 28px;
+    background: var(--ivory);
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    line-height: 1.9;
+}
+
+.module-card .theory-box p {
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    margin: 0 0 16px;
+}
+
+.module-card .theory-box p:last-child {
+    margin-bottom: 0;
+}
+
+.module-card .theory-box.scrolled-end {
+    border-color: #2E7D4F;
+}
+
+.mod-text {
+    width: 100%;
+    min-height: 240px;
+    font-size: 1rem;
+    line-height: 1.7;
+    resize: vertical;
+}

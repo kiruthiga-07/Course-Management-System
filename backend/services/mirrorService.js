@@ -35,14 +35,14 @@ async function mirrorEnrollment(record) {
                     enrolledAt: record.enrolledAt ? new Date(record.enrolledAt) : new Date()
                 }
             },
-            { upsert: true, new: true }
+            { upsert: true, returnDocument: "after" }
         );
 
         const parts = record.moduleProgress && typeof record.moduleProgress === "object"
             ? Object.values(record.moduleProgress)
             : [];
         const completedModules = parts.filter(
-            (part) => part && part.photo && part.video && part.theory
+            (part) => part && part.theory
         ).length;
         const percent = Number.isFinite(record.progress) ? record.progress : 0;
         const courseModules = Array.isArray(course.modules) ? course.modules.length : 0;

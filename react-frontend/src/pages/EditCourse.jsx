@@ -67,9 +67,9 @@ export default function EditCourse() {
                         <div className="modules-section">
                             <h3>Module Content</h3>
                             <p className="modules-section-hint">
-                                Each module shown to students has a Photo, a Video and a Theory part. Everything here is
-                        optional — leave a field blank and EduTrack will fall back to sensible auto-generated
-                        content for this course's field.
+                                Add the text students will read in each module. Leave a blank line between paragraphs.
+                                A module is marked complete when the student scrolls to the end of its text. Existing
+                                courses already contain ready-made content, which you can edit here and save.
                             </p>
                             <div id="modulesEditor"></div>
                             <button type="button" id="addModuleBtn" className="btn btn-outline" style={{marginBottom: "1rem"}}>+ Add Module</button>

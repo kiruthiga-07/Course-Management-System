@@ -754,6 +754,7 @@ EduTrack.pages['admin-dashboard'] = function () {
                 var form = document.getElementById('courseForm');
                 form.reset();
                 document.getElementById('courseFormId').value = '';
+                document.getElementById('editContentBtn').textContent = courseId ? 'Edit Course Content' : 'Add Course Content';
 
                 if (courseId) {
                     var course = CD.loadCourses().filter(function (c) { return c.id === courseId; })[0];
@@ -782,14 +783,9 @@ EduTrack.pages['admin-dashboard'] = function () {
 
             document.getElementById('openAddCourseBtn').addEventListener('click', function () { openCourseForm(null); });
             document.getElementById('cancelCourseFormBtn').addEventListener('click', closeCourseForm);
-            document.getElementById('courseFormOverlay').addEventListener('click', function (e) {
-                if (e.target === this) closeCourseForm();
-            });
-
-            document.getElementById('courseForm').addEventListener('submit', function (e) {
-                e.preventDefault();
+            function collectCourseForm() {
                 var id = document.getElementById('courseFormId').value;
-                var course = {
+                return {
                     id: id || undefined,
                     title: document.getElementById('courseFormTitleInput').value.trim(),
                     field: document.getElementById('courseFormField').value,
@@ -800,6 +796,23 @@ EduTrack.pages['admin-dashboard'] = function () {
                     certificate: document.getElementById('courseFormCertificate').value,
                     description: document.getElementById('courseFormDescription').value.trim()
                 };
+            }
+
+            document.getElementById('editContentBtn').addEventListener('click', function () {
+                var form = document.getElementById('courseForm');
+                if (!form.reportValidity()) return;
+                var saved = CD.upsertCourse(collectCourseForm());
+                if (saved && saved.id) {
+                    window.location.href = 'edit-course.html?course=' + encodeURIComponent(saved.id);
+                }
+            });
+            document.getElementById('courseFormOverlay').addEventListener('click', function (e) {
+                if (e.target === this) closeCourseForm();
+            });
+
+            document.getElementById('courseForm').addEventListener('submit', function (e) {
+                e.preventDefault();
+                var course = collectCourseForm();
                 CD.upsertCourse(course);
                 closeCourseForm();
                 renderAll();
@@ -914,13 +927,69 @@ EduTrack.pages['admin-dashboard'] = function () {
                     '</div>';
             }
 
+            var registeredStudents = null;
+
+            function renderRegistered() {
+                var body = document.getElementById('registeredPanelBody');
+                if (registeredStudents === null) return;
+
+                document.getElementById('countRegistered').textContent = registeredStudents.length + ' registered';
+                document.getElementById('statStudents').textContent = registeredStudents.length;
+
+                if (!registeredStudents.length) {
+                    body.innerHTML = emptyState('No students have registered yet.');
+                    return;
+                }
+
+                var enrollments = E.loadEnrollments();
+                var rows = registeredStudents.map(function (st) {
+                    var roll = String(st.rollNo || '').trim().toLowerCase();
+                    var count = enrollments.filter(function (e) {
+                        return String(e.rollNo || '').trim().toLowerCase() === roll;
+                    }).length;
+                    var joined = st.createdAt ? new Date(st.createdAt).toLocaleDateString('en-GB') : '';
+                    return '<tr>' +
+                        '<td><strong>' + escapeHtml(st.name) + '</strong></td>' +
+                        '<td>' + escapeHtml(st.rollNo) + '</td>' +
+                        '<td>' + escapeHtml(st.email) + '</td>' +
+                        '<td>' + escapeHtml(st.department) + '</td>' +
+                        '<td>' + count + '</td>' +
+                        '<td>' + joined + '</td>' +
+                    '</tr>';
+                }).join('');
+
+                body.innerHTML = '<div class="dash-table-wrap"><table class="dash-table">' +
+                    '<thead><tr><th>Name</th><th>Roll No</th><th>Email</th><th>Department</th><th>Courses Enrolled</th><th>Registered On</th></tr></thead>' +
+                    '<tbody>' + rows + '</tbody>' +
+                '</table></div>';
+            }
+
+            function loadRegistered() {
+                var base = (window.EduTrackServer && window.EduTrackServer.baseUrl) || 'http://localhost:5000/api/v1';
+                fetch(base + '/students', {
+                    headers: { 'Authorization': 'Bearer ' + sessionStorage.getItem('token') }
+                }).then(function (response) {
+                    return response.json().catch(function () { return {}; }).then(function (data) {
+                        if (!response.ok) throw new Error(data.message || 'Unable to load students');
+                        return data;
+                    });
+                }).then(function (data) {
+                    registeredStudents = data.students || [];
+                    renderRegistered();
+                }).catch(function (err) {
+                    document.getElementById('registeredPanelBody').innerHTML = emptyState('Could not load registered students: ' + escapeHtml(err.message));
+                });
+            }
+
             function renderAll() {
                 renderCurriculum();
                 renderEnrollments();
+                renderRegistered();
                 renderAnalytics();
             }
 
             renderAll();
+            loadRegistered();
 
             // Keep the admin view live: if a student enrolls or completes
             // a module in another tab, refresh automatically.
